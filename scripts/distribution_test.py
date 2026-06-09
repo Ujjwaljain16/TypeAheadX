@@ -12,8 +12,8 @@ def generate_random_prefix(length: int = 5) -> str:
     return "".join(random.choices(string.ascii_lowercase, k=length))
 
 def run_distribution_test():
-    print("Initializing Consistent Hash Ring with 1000 virtual nodes...")
-    ring = ConsistentHashRing(virtual_nodes=1000)
+    print("Initializing Consistent Hash Ring with 500 virtual nodes...")
+    ring = ConsistentHashRing(virtual_nodes=500)
     
     nodes = ["redis-a", "redis-b", "redis-c"]
     for node in nodes:

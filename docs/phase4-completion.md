@@ -13,7 +13,7 @@ If a specific node (e.g. `redis-b`) is taken offline, only the keys belonging to
 
 ## Scientific Validation
 We wrote mathematical validation scripts.
-- `distribution_test.py` proves our 150 virtual nodes segment the ring equitably.
+- `distribution_test.py` proves our 500 virtual nodes segment the ring equitably.
 - `rebalance_experiment.py` proves our hash ring architecture prevents catastrophic cache avalanches, dropping the penalty of adding a new node from 75% invalidation (modulo) to ~22% invalidation (consistent).
 
 ## Viva Talking Points

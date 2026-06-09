@@ -53,7 +53,7 @@ def run_rebalance_experiment():
     # EXPERIMENT B: CONSISTENT HASHING
     # ---------------------------------------------------------
     print("\n--- EXPERIMENT B: CONSISTENT HASHING ---")
-    ring = ConsistentHashRing(virtual_nodes=1000)
+    ring = ConsistentHashRing(virtual_nodes=500)
     for node in nodes_3:
         ring.add_node(node)
         

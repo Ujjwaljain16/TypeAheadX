@@ -10,9 +10,9 @@ Instead, we map both **keys** and **nodes** onto a 128-bit ring using `hashlib.m
 ## Virtual Nodes
 A core problem with consistent hashing is uneven distribution. If we only place 3 physical nodes on the ring, one node might randomly own 70% of the keyspace.
 
-To solve this, we assign **150 Virtual Nodes** (replicas) per physical node. 
-- `redis-a` generates `redis-a_replica_0` through `redis-a_replica_149`
-- These 450 total points spread out evenly across the 128-bit integer space.
+To solve this, we assign **500 Virtual Nodes** (replicas) per physical node. 
+- `redis-a` generates `redis-a_replica_0` through `redis-a_replica_499`
+- These 1500 total points spread out evenly across the 128-bit integer space.
 - This dramatically reduces standard deviation and mathematically ensures each physical node receives roughly ~33% of the cache load.
 
 ## Graceful Degradation
