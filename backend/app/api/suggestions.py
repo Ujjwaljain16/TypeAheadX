@@ -15,11 +15,15 @@ def get_repository() -> QueryRepository:
     return QueryRepository(get_session)
 
 
+from ..cache.factory import CacheFactory
+
 def get_service(settings: Settings = Depends(get_settings)) -> SuggestionService:
     return SuggestionService(
         get_repository(),
+        cache=CacheFactory.get_cache(),
         max_prefix_length=settings.max_prefix_length,
         default_limit=settings.default_limit,
+        cache_ttl_seconds=settings.cache_ttl_seconds,
     )
 
 

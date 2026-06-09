@@ -4,13 +4,19 @@ from fastapi import FastAPI
 from fastapi.requests import Request
 
 from .api.suggestions import router as suggestions_router
+from .api.cache import router as cache_router
 
 app = FastAPI(title="TypeAheadX", version="1.0.0")
 from fastapi.middleware.cors import CORSMiddleware
+from .cache.factory import CacheFactory
+import logging
+
+logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 def on_startup():
-	pass
+    logger.info("Initializing Cache...")
+    CacheFactory.get_cache()
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,6 +27,7 @@ app.add_middleware(
 )
 
 app.include_router(suggestions_router)
+app.include_router(cache_router)
 
 
 @app.get("/health")
