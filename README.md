@@ -131,4 +131,4 @@ Expected: iphone-related results
 Phase 1: PostgreSQL-only autocomplete API with latency benchmarking.
 
 No caching or distributed components should be introduced until a baseline is measured.
-# TypeAheadX
+
