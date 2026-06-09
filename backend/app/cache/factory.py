@@ -16,13 +16,18 @@ class CacheFactory:
 
         from ..database.config import get_settings
         
-        provider = get_settings().cache_provider.lower()
+        provider_name = get_settings().cache_provider.lower()
         
-        if provider == "redis":
-            logger.info("Initializing RedisCache")
+        if provider_name == "redis":
+            from .redis_cache import RedisCache
+            logger.info("CacheFactory: Using Redis cache")
             cls._instance = RedisCache()
+        elif provider_name == "distributed":
+            from .distributed_cache import DistributedCache
+            logger.info("CacheFactory: Using Distributed Redis cache")
+            cls._instance = DistributedCache()
         else:
-            logger.info("Initializing InMemoryCache")
+            logger.warning(f"CacheFactory: Unknown provider '{provider_name}', falling back to InMemoryCache")
             cls._instance = InMemoryCache()
             
         return cls._instance

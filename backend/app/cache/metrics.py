@@ -7,6 +7,11 @@ class CacheMetrics:
     sets: int = 0
     deletes: int = 0
     errors: int = 0
+    node_hits: dict = {}
+
+    @classmethod
+    def record_node_hit(cls, node_name: str):
+        cls.node_hits[node_name] = cls.node_hits.get(node_name, 0) + 1
 
     @classmethod
     def record_hit(cls):
@@ -43,7 +48,8 @@ class CacheMetrics:
             "sets": cls.sets,
             "deletes": cls.deletes,
             "errors": cls.errors,
-            "hit_rate": cls.get_hit_rate()
+            "hit_rate": cls.get_hit_rate(),
+            "node_hits": cls.node_hits
         }
 
     @classmethod
@@ -53,3 +59,4 @@ class CacheMetrics:
         cls.sets = 0
         cls.deletes = 0
         cls.errors = 0
+        cls.node_hits = {}

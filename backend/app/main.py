@@ -38,7 +38,6 @@ def health():
 @app.middleware("http")
 async def add_timing_header(request: Request, call_next):
 	import time
-
 	start = time.perf_counter()
 	response = await call_next(request)
 	total_ms = (time.perf_counter() - start) * 1000.0
