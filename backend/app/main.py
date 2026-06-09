@@ -6,12 +6,26 @@ from fastapi.requests import Request
 from .api.suggestions import router as suggestions_router
 
 app = FastAPI(title="TypeAheadX", version="1.0.0")
+from fastapi.middleware.cors import CORSMiddleware
+
+@app.on_event("startup")
+def on_startup():
+	pass
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(suggestions_router)
 
 
 @app.get("/health")
 def health():
-	return {"status": "healthy", "service": "querypulse-api", "phase": "phase-1"}
+	return {"status": "healthy", "service": "typeaheadx-api", "phase": "phase-1"}
 
 
 @app.middleware("http")
