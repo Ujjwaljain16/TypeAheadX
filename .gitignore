@@ -1,2 +1,21 @@
 # Raw dataset downloads
 /data/raw/*
+
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Environment variables
+backend/.env
+
+# IDE
+.vscode/
+
+# Dataset cache
+*.parquet
+*.arrow
+.cache/

@@ -3,26 +3,21 @@ from __future__ import annotations
 import argparse
 import csv
 import os
-import subprocess
 import sys
 import tempfile
+import psycopg
 from pathlib import Path
 from typing import Iterable, TextIO
 
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")
-DEFAULT_DSN = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/typeaheadx")
+DEFAULT_DSN = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5433/typeaheadx")
 DEFAULT_INPUT = Path(__file__).resolve().parent.parent / "data" / "processed" / "queries.csv"
 
 
-def run_psql(dsn: str, sql_path: Path) -> None:
-    subprocess.run(
-        ["psql", dsn, "-v", "ON_ERROR_STOP=1", "-f", str(sql_path)],
-        check=True,
-    )
-
-
 def load_schema(dsn: str) -> None:
-    run_psql(dsn, SCHEMA_PATH)
+    with psycopg.connect(dsn) as conn:
+        conn.execute(SCHEMA_PATH.read_text(encoding="utf-8"))
+        conn.commit()
 
 
 def open_input(path: str | None) -> TextIO:
@@ -35,6 +30,8 @@ def iter_rows(handle: TextIO) -> Iterable[tuple[str, int]]:
     reader = csv.reader(handle)
     for row_number, row in enumerate(reader, start=1):
         if not row:
+            continue
+        if row_number == 1 and row[0] == "query":
             continue
         if len(row) != 2:
             raise ValueError(f"Expected 2 columns on line {row_number}, got {len(row)}")
@@ -57,29 +54,33 @@ def ingest_csv(dsn: str, handle: TextIO) -> int:
             row_count += 1
 
     data_path = Path(data_file.name)
-    script_content = f"""
-DROP TABLE IF EXISTS queries_ingest_stage;
-CREATE TEMP TABLE queries_ingest_stage (
-    query TEXT NOT NULL,
-    historical_count BIGINT NOT NULL
-) ON COMMIT DROP;
-\copy queries_ingest_stage (query, historical_count) FROM '{data_path.as_posix()}' WITH (FORMAT CSV)
-INSERT INTO queries (query, historical_count)
-SELECT query, historical_count
-FROM queries_ingest_stage
-ON CONFLICT (query)
-DO UPDATE SET historical_count = queries.historical_count + EXCLUDED.historical_count;
-"""
-
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".sql", delete=False) as script_file:
-        script_file.write(script_content)
-        script_path = Path(script_file.name)
 
     try:
-        run_psql(dsn, script_path)
+        with psycopg.connect(dsn) as conn:
+            with conn.cursor() as cur:
+                cur.execute("DROP TABLE IF EXISTS queries_ingest_stage;")
+                cur.execute("""
+                CREATE TEMP TABLE queries_ingest_stage (
+                    query TEXT NOT NULL,
+                    historical_count BIGINT NOT NULL
+                ) ON COMMIT DROP;
+                """)
+                
+                with open(data_path, "r", encoding="utf-8") as f:
+                    with cur.copy("COPY queries_ingest_stage (query, historical_count) FROM STDIN WITH (FORMAT CSV)") as copy:
+                        while data := f.read(8192):
+                            copy.write(data)
+                
+                cur.execute("""
+                INSERT INTO queries (query, historical_count)
+                SELECT query, historical_count
+                FROM queries_ingest_stage
+                ON CONFLICT (query)
+                DO UPDATE SET historical_count = queries.historical_count + EXCLUDED.historical_count;
+                """)
+            conn.commit()
     finally:
         data_path.unlink(missing_ok=True)
-        script_path.unlink(missing_ok=True)
 
     return row_count
 
