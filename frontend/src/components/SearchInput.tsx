@@ -67,7 +67,7 @@ export function SearchInput() {
 
     try {
       // Fire and forget search submission
-      await fetch("http://localhost:8000/api/search", {
+      await fetch("http://localhost:8000/search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

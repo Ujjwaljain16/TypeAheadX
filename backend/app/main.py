@@ -2,6 +2,12 @@ from __future__ import annotations
 import time
 import logging
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+
+
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,7 +40,13 @@ app.add_middleware(
 
 async def warm_up_cache():
     logger.info("Warming up cache for A-Z prefixes...")
-    service = SuggestionService()
+    from .repositories.query_repository import QueryRepository
+    from .services.suggestion_service import SuggestionService
+    from .cache.factory import CacheFactory
+    
+    repository = QueryRepository()
+    cache = CacheFactory.get_cache()
+    service = SuggestionService(repository, cache)
     for char in string.ascii_lowercase:
         try:
             # We must use asyncio.to_thread because the underlying db call is synchronous

@@ -7,7 +7,31 @@
 The architecture evolved through a rigorous cycle:
 `Design` → `Implement` → `Benchmark` → `Discover unexpected behavior` → `Run experiments` → `Measure trade-offs` → `Refine architecture`.
 
-## 1. Hero Section: Engineering Achievements
+## 1. Live Demos & Architecture Proofs
+
+To prove this isn't just a frontend mockup, we recorded the real-time UI interactions and the backend internal mechanics.
+
+### The UI Experience
+A sub-millisecond autocomplete experience powered by the distributed caching engine. The search volumes on the right update dynamically based on real user interactions.
+
+![TypeAheadX UI Demo Recording](./assets/typeaheadx_demo.webp)
+
+### Backend Mechanics (Consistent Hash Ring)
+Our 128-bit MD5 hashing perfectly distributes prefixes across 3 physical servers using 500 virtual nodes. Live proofs from the `/cache/debug` endpoint:
+
+**Prefix `"nike"` routes to `redis-a`:**
+![Nike routed to Redis-A](./assets/cache_debug_nike.png)
+
+**Prefix `"iphone"` routes to `redis-b`:**
+![iPhone routed to Redis-B](./assets/cache_debug_iphone.png)
+
+### Live Cache Metrics
+The `/metrics` endpoint proves the active cache hit rate is shielding PostgreSQL from read load:
+![Live Cache Metrics](./assets/metrics_json.png)
+
+---
+
+## 2. Engineering Achievements
 
 The system successfully handles realistic high-volume simulated workloads and complex failure states, validated by comprehensive benchmarking.
 
@@ -54,7 +78,7 @@ The system successfully handles realistic high-volume simulated workloads and co
             Production trade-off analysis
 ```
 
-## 2. Why TypeAhead Systems Are Hard
+## 3. Why TypeAhead Systems Are Hard
 
 Building an autocomplete engine sounds trivial until you face real-world traffic patterns. The challenges operate at the intersection of low-latency reads, high-throughput writes, and extreme data skew:
 
@@ -66,7 +90,7 @@ Building an autocomplete engine sounds trivial until you face real-world traffic
 6. **Horizontal Scaling**: As the cache layer scales, mapping prefixes to shards efficiently becomes critical.
 7. **Failure Scenarios**: A cache node failure shifts massive read volume directly to the database, creating a classic thundering herd.
 
-## 3. Things That The Benchmarks Taught Us (Unexpected Findings)
+## 4. Things That The Benchmarks Taught Us (Unexpected Findings)
 
 Most projects describe how a system works. This project is defined by how our assumptions failed. The most valuable lessons came from the moments where the data contradicted our intuition:
 
@@ -75,7 +99,7 @@ Most projects describe how a system works. This project is defined by how our as
 3. **The System is a Shock Absorber**: The most beautiful emergent behavior was that the write buffer becomes exponentially more efficient exactly when we need it most. During viral traffic spikes, the write reduction dynamically scales from 74% to 95%.
 4. **Graceful Fallback Does Not Prevent Thundering Herds**: Failing over to the database on a cache miss works at 10 QPS. At 10,000 QPS, a cache node failure is essentially a DDOS attack on the primary database.
 
-## 4. Architectural Evolution Timeline
+## 5. Architectural Evolution Timeline
 
 ```text
 Phase 1:
@@ -112,7 +136,7 @@ Phase 6:
 Benchmarking and failure analysis
 ```
 
-## 5. Architecture Evolution Journey
+## 6. Architecture Evolution Journey
 
 ### Phase 0: Dataset and Storage Foundation
 
@@ -231,7 +255,7 @@ We simulated a node failure (killing Redis B). Mass cache misses for Redis B's k
 
 ---
 
-## 6. Final Architecture
+## 7. Final Architecture
 
 ```text
                             +--------------------------+
@@ -275,7 +299,7 @@ We simulated a node failure (killing Redis B). Mass cache misses for Redis B's k
 
 ---
 
-## 7. Technology Stack
+## 8. Technology Stack
 
 | Layer | Technologies |
 | :--- | :--- |
@@ -286,7 +310,7 @@ We simulated a node failure (killing Redis B). Mass cache misses for Redis B's k
 
 ---
 
-## 8. API Documentation
+## 9. API Documentation
 
 ### `GET /suggest`
 Fetches autocomplete suggestions for a given prefix.
@@ -319,7 +343,7 @@ Service health and dependency availability checks.
 
 ---
 
-## 9. Database Schema
+## 10. Database Schema
 
 The core schema revolves around the `queries` table.
 
@@ -346,7 +370,7 @@ CREATE INDEX idx_query_prefix ON queries (query text_pattern_ops);
 
 ---
 
-## 10. Engineering Trade-Offs
+## 11. Engineering Trade-Offs
 
 | Decision | Alternatives | Chosen | Why |
 | :--- | :--- | :--- | :--- |
@@ -358,7 +382,7 @@ CREATE INDEX idx_query_prefix ON queries (query text_pattern_ops);
 
 ---
 
-## 11. Known Architectural Limitations
+## 12. Known Architectural Limitations
 
 This project is a **production-style distributed architecture**, but to maintain scope, we explicitly accepted the following limitations:
 1. **No Redis Replication**: Single shards are used. In a true production environment, we would use Redis Cluster or Sentinel.
@@ -369,7 +393,7 @@ This project is a **production-style distributed architecture**, but to maintain
 
 ---
 
-## 12. Running Locally
+## 13. Running Locally
 
 **Prerequisites**: Docker Desktop, Node.js 20+, Python 3.12+
 
@@ -413,7 +437,7 @@ This project is a **production-style distributed architecture**, but to maintain
 
 ---
 
-## 13. Validation Methodology
+## 14. Validation Methodology
 
 **Functional Validation**
 - API integration tests
@@ -434,7 +458,7 @@ This project is a **production-style distributed architecture**, but to maintain
 
 ---
 
-## 14. What I Would Build Next
+## 15. What I Would Build Next
 
 TypeAheadX intentionally stops at the point where new distributed systems challenges emerge.
 
@@ -448,7 +472,7 @@ The next architectural evolution would introduce:
 
 ---
 
-## 15. Key Engineering Lessons
+## 16. Key Engineering Lessons
 
 1. **Uniform key distribution does not imply uniform traffic distribution.**
 2. **Bigger buffers maximize throughput but hurt freshness.**
@@ -457,6 +481,6 @@ The next architectural evolution would introduce:
 
 ---
 
-## 16. Author's Note
+## 17. Author's Note
 
 **AI Collaboration:** This project was built using an advanced AI agent as a coding and drafting assistant. While the AI was heavily utilized to write the implementation code and format these documentation files, **every architectural decision, design constraint, debugging strategy, and exact technical direction was explicitly commanded by me.** The AI acted as a highly capable pair-programmer; the engineering architecture and system design are my own.
