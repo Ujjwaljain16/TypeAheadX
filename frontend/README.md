@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TypeAheadX Frontend
+
+This is the Next.js frontend for **TypeAheadX**, designed to provide a highly responsive, Google-like autocomplete search experience while remaining robust against race conditions and network spam.
+
+## Tech Stack
+- **Framework**: Next.js 15 (App Router)
+- **Library**: React 19
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+
+## Engineering Highlights
+
+While the backend handles the heavy lifting of consistent hashing and distributed caching, the frontend is engineered to handle chaotic user input efficiently:
+
+1. **Debouncing (250ms)**: User keystrokes are debounced to ensure we don't spam the API with 6 requests for a 6-letter word. It waits until the user pauses typing before fetching.
+2. **Request Cancellation (`AbortController`)**: If a user types "iphone", deletes it, and types "samsung" rapidly, the network might return "iphone" results *after* "samsung" results. We use `AbortController` to cancel in-flight requests, guaranteeing the UI never displays stale data from a race condition.
+3. **Trending Feedback Loop**: Clicking a suggestion (or hitting Enter) fires a `POST` request to the backend, feeding the async write-buffer and dynamically updating the global popularity rankings.
 
 ## Getting Started
 
-First, run the development server:
+First, ensure the FastAPI backend is running on `http://localhost:8000`.
+
+Then, install dependencies and start the development server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000) with your browser to interact with the search engine.

@@ -34,8 +34,8 @@ class DistributedCache(CacheInterface):
             parts = node_str.split(":")
             if len(parts) == 2:
                 host, port_str = parts
-                name = host # Simplify name to host for now, or could use host:port
                 port = int(port_str)
+                name = f"redis-{chr(97 + port - 6379)}" if host == "localhost" and 6379 <= port <= 6381 else f"{host}:{port}"
                 
                 # Add physical node to the ring
                 self.ring.add_node(name)

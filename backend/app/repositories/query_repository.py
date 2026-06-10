@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Sequence, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..services.trending_calculator import DecayedUpdate
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -56,12 +59,13 @@ class QueryRepository:
             return
             
         sql = text("""
-            INSERT INTO queries (query, historical_count, recent_count, last_decay_at)
-            VALUES (:query, :historical_count, :recent_count, :last_decay_at)
+            INSERT INTO queries (query, historical_count, recent_count, last_decay_at, last_searched_at)
+            VALUES (:query, :historical_count, :recent_count, :last_decay_at, NOW())
             ON CONFLICT (query) DO UPDATE SET
                 historical_count = EXCLUDED.historical_count,
                 recent_count = EXCLUDED.recent_count,
-                last_decay_at = EXCLUDED.last_decay_at
+                last_decay_at = EXCLUDED.last_decay_at,
+                last_searched_at = NOW()
         """)
         
         # Prepare parameters

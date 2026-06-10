@@ -1,9 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
 
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../backend')))
 
 from app.main import app
 
@@ -15,7 +12,7 @@ def test_health():
     data = response.json()
     assert data["status"] == "healthy"
     assert data["service"] == "typeaheadx-api"
-    assert data["phase"] == "phase-1"
+    assert data["phase"] == "phase-5"
 
 def test_valid_prefix():
     response = client.get("/suggest?q=iph")

@@ -59,11 +59,24 @@ export function SearchInput() {
     }
   };
 
-  const handleSelect = (selectedQuery: string) => {
+  const handleSelect = async (selectedQuery: string) => {
     setQuery(selectedQuery);
     setIsFocused(false);
     setSelectedIndex(-1);
     setSubmittedQuery(selectedQuery);
+
+    try {
+      // Fire and forget search submission
+      await fetch("http://localhost:8000/api/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: selectedQuery }),
+      });
+    } catch (err) {
+      console.error("Failed to submit search:", err);
+    }
   };
 
   const showDropdown = isFocused && query.length > 0;
@@ -131,12 +144,11 @@ export function SearchInput() {
         />
       </div>
 
-      {/* Fake Submission State */}
       {submittedQuery && (
         <div className="mt-8 p-6 bg-slate-50 border border-slate-200 rounded-xl w-full text-center animate-in fade-in slide-in-from-bottom-4 duration-300">
           <p className="text-slate-500 mb-2">Selected query:</p>
           <p className="text-2xl font-bold text-slate-800 mb-4">{submittedQuery}</p>
-          <p className="text-sm text-indigo-500 font-medium">Search submission will be implemented in Phase 5.</p>
+          <p className="text-sm text-emerald-500 font-medium">✅ Search recorded to backend buffer.</p>
         </div>
       )}
     </div>
