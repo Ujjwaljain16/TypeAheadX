@@ -39,7 +39,7 @@ Verified against code, not docs; discrepancies are listed in §6.
 | F-02 | LIKE metacharacters | escaping, `ESCAPE '\'`, index use asserted | 150-case property test vs PostgreSQL |
 | F-20, F-01 | cannot install/build | requirements, lock regenerated (0 CVEs), Next pinned to a published release | clean-venv 121/121; Linux `npm ci` + `tsc` |
 | F-10 | trending ranking not implemented | **implemented** (follow-up): read-time decayed score, dead index removed; rows never searched rank as before | 6 DB-backed tests incl. end-to-end; mutants M16/M17; plan unchanged, worst case +0.8 ms |
-| F-27 | hung (frozen) PostgreSQL | **fixed for reads** (follow-up): 2 s deadline + bulkhead + breaker; writes deliberately unguarded | frozen-DB runs: zero-success seconds 14 → 0, slowest request 6 s → 2 s, p99 5 s → 18 ms; 8 tests; mutants M14/M15 (`BENCHMARK_RESULTS.md` §7) |
+| F-27 | hung (frozen) PostgreSQL | **fixed for reads** (follow-up): 2 s deadline + bulkhead + breaker; writes deliberately unguarded | frozen-DB runs: zero-success seconds 14 → 0, slowest request 6 s → 2 s, p99 5 s → 12–18 ms; ≈ +0.4 ms on healthy misses; 9 tests; mutants M14/M15 (`BENCHMARK_RESULTS.md` §7) |
 
 ## 4. Security assessment (threat model summary)
 Assets: suggestion integrity (popularity counters), availability, Redis/PostgreSQL data. Trust boundary: the public HTTP API (anyone can call `/search`, `/suggest`, `/metrics`, `/cache/*`).
@@ -74,7 +74,7 @@ Interleaved baseline vs final, 3 repetitions per point, one worker, one machine:
 | Flush of 100 queries | ≈ 500 ms | ≈ 14 ms | |
 | Lost updates, 6 flushers | 67–70 % | 0 % | |
 | Miss-path latency (cold/mixed/high-cardinality/read-write at ≤ 150 rps) | — | within noise (≤ −20 % at best) | the cache is not the dominant cost; PostgreSQL + network are |
-| PostgreSQL frozen (20 s) | 14 s with zero successes, slowest 6 s, p99 5 s | **0 s** with zero successes, slowest 2 s, p99 18 ms (error rate unchanged ≈ 26 % — misses cannot be answered — but immediate 503s) | follow-up commit |
+| PostgreSQL frozen (20 s) | 14 s with zero successes, slowest 6 s, p99 5 s | **0 s** with zero successes, slowest 2 s, p99 12–18 ms (error rate unchanged ≈ 26–32 % — misses cannot be answered — but immediate 503s) | follow-up commit |
 
 Honest caveats: the first (non-interleaved) matrix measured the same baseline code ≈ 2× slower and with a ≈ 300 rps knee — machine drift,
 which is why only interleaved comparisons are used. The final code in the 240-point matrix was `v_final`; two later changes (retry disable; skipping the unconditional
@@ -118,7 +118,7 @@ cache re-check) were validated in isolation (outage ×4 runs, high-cardinality �
 ## 9. Final verification checklist
 | Item | Result |
 |---|---|
-| Tests | **134 passed** at the follow-up commit (121 at the main audit commit) (62 need no services; 59 integration tests run against real PostgreSQL 15 + Redis 7 and are skipped with a reason when the two environment variables are absent); 89 % line coverage of `app/`; also 121/121 in a clean venv with the newest resolvable dependencies (Starlette 1.8, FastAPI 0.143, SQLAlchemy 2.1, pytest 9) |
+| Tests | **136 passed** at the follow-up commits (121 at the main audit commit) (71 need no services; 65 integration tests run against real PostgreSQL 15 + Redis 7 and are skipped with a reason when the two environment variables are absent); 89 % line coverage of `app/`; also 121/121 in a clean venv with the newest resolvable dependencies (Starlette 1.8, FastAPI 0.143, SQLAlchemy 2.1, pytest 9) |
 | Mutation check | 13 re-introduced defects (`benchmarks/mutation_smoke.py`): **17/17 killed** (13 at the main commit; M14–M17 cover the database guard and the ranking); three survivors were first found and fixed in the *mutants/tests* (equivalent mutant, probabilistic deadlock test, wrong retry mutant) |
 | Static analysis | bandit: no issues after `usedforsecurity=False` on MD5 and a `nosec` on jitter; ruff F,B,S: clean; pip-audit: new lock 0 CVEs (old lock 12); `tsc --noEmit`: clean; eslint: 2 pre-existing errors remain (3 fixed) |
 | Frontend build | `next build` OK on Windows; `npm ci` + `tsc` OK on Linux (node:22-alpine); Linux `next build` not run (needs network for Google Fonts) |

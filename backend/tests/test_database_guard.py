@@ -48,7 +48,7 @@ def test_bulkhead_rejects_immediately_when_hung_calls_hold_every_slot():
     t0 = time.perf_counter()
     with pytest.raises(DatabaseUnavailable, match="saturated"):
         g.call(lambda: 1)
-    assert time.perf_counter() - t0 < 0.05              # rejected at once, never queued behind the hung workers
+    assert time.perf_counter() - t0 < 0.3               # rejected after the 50 ms slot wait, never queued behind the hung workers
     release.set()                                       # database "comes back": hung calls finish, slots free up
     deadline = time.time() + 3
     while time.time() < deadline:
@@ -132,3 +132,14 @@ def test_saturation_rejections_do_not_open_the_breaker_and_do_not_lose_the_probe
     with pytest.raises(DatabaseUnavailable, match="saturated"):
         g.call(lambda: 1)                               # a lost probe would make this say "circuit open" instead
     release.set()
+
+
+def test_a_momentary_spike_waits_briefly_for_a_slot_instead_of_failing():
+    g = DatabaseGuard(max_concurrency=1, timeout_s=1.0, breaker_seconds=30, slot_wait_s=0.5)
+    results = []
+    t = threading.Thread(target=lambda: results.append(g.call(lambda: time.sleep(0.15) or "slow")))
+    t.start()
+    time.sleep(0.03)                                    # the only slot is busy for another ~120 ms ...
+    assert g.call(lambda: "second") == "second"         # ... the second caller waits for it instead of getting a 503
+    t.join()
+    assert results == ["slow"] and not g.is_open

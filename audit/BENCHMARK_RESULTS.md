@@ -154,11 +154,24 @@ experiment artefact and is *not* a finding). The trade-off of the cap: under ext
 |---|---:|---:|---:|---:|---|---:|
 | baseline | 27.1 % / 26.0 % | 14 / 14 | 22 / 22 | ≈ 6.0 s | 2.9–3.6 s / 4.6–5.3 s | 19 % / 22 % |
 | previous fixed version (`final3`) | 22.7 % / 24.9 % | 12 / 13 | 20 / 21 | ≈ 6.0 s | 3.2–3.4 s / 4.8–5.1 s | 32 % / 25 % |
-| **with the database guard** (deadline 2 s, bulkhead, breaker) | 25.8 % / 25.6 % | **0 / 0** | **2 / 2** | **2.0 s** (the deadline) | **6.8–9.5 ms / 17.6–18.0 ms** | 27 % / 27 % |
+| **with the database guard** (deadline 2 s, bulkhead, breaker; first iteration, `g1_guard`) | 25.8 % / 25.6 % | **0 / 0** | **2 / 2** | **2.0 s** (the deadline) | **6.8–9.5 ms / 17.6–18.0 ms** | 27 % / 27 % |
+| **final guard configuration** (15 slots, 50 ms slot wait; `g7_guard3`) | 32.0 % / 32.1 % | **0 / 0** | **3 / 3** | **2.03 s** | **9.4–11.3 ms / 11.9–14.1 ms** | 27 % / 27 % |
 
 The error *rate* is the same by construction — cache misses cannot be answered while the database is frozen — but without the guard those misses held request threads for ≈ 5 s each and starved
 everything else (zero successes for 12–14 s, including requests that were in the cache); with the guard they fail instantly with 503 and cached prefixes keep being served at normal latency. Recovery
 after the database was released was observed in the timeline (successes resume within the breaker window, ≈ 5–6 s). Reads only: writes keep their blocking, at-most-once behaviour (FINDINGS F-27).
+
+### 7.1 What the guard costs when the database is healthy (miss path)
+`pgonly` (every request is a database call), 400 rps, 20 s windows, 4 interleaved repetitions, previous version vs final guard (`g6_*`):
+
+| | p50 per rep (ms) | p99 per rep (ms) | API CPU % per rep | spurious 503s |
+|---|---|---|---|---|
+| previous version (no guard) | 4.52, 4.36, 2.46, 4.43 | 304, 51, 1 495, 213 | 79, 74, 58, 74 | 0, 0, 0, 0 |
+| final guard | 5.39, 4.62, 2.43, 5.81 | 84, 45, 11, 267 | 93, 75, 46, 90 | **0, 0, 0, 0** |
+
+Cost ≈ +0.4 ms median p50 (≈ +9 %: one extra thread hop per database call), p99 not worse, CPU within run-to-run noise. Cache hits are not affected (they never reach the guard).
+**An intermediate configuration (12 slots, instant rejection) produced 3–51 spurious 503s in 3 of 6 runs at 300–400 rps** when a brief database stall pushed concurrency over the limit; raising the limit to the pool size (15)
+and waiting up to 50 ms for a slot removed them (0 of 4 runs; `g4_*`/`g6_*`). During a real freeze the wait costs nothing because the breaker is open after the first timeout.
 
 ## 8. Resource use
 * Redis: ≈ 540–700 bytes per cached prefix (3 nodes, 4.5–5 k keys ≈ 5.3–6.1 MB total incl. ≈ 1 MB empty overhead each). With `noeviction`

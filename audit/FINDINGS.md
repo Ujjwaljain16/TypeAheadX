@@ -234,14 +234,15 @@ Flush of 100 distinct queries: ≈ 500 ms (SELECT + 100-row executemany + ≈ 1 
   `DB_QUERY_TIMEOUT_SECONDS` (2 s); no more than `DB_MAX_CONCURRENCY` calls are in flight (bulkhead — callers are rejected immediately instead of queueing behind hung ones; a rejection is load, not a sick database, so it does not open the breaker); the first timeout or
   connection-level error opens a circuit breaker for `DB_BREAKER_SECONDS` (5 s), during which misses fail instantly with 503 + `Retry-After` and cache hits are untouched; one probe then tests recovery.
   The breaker implementation is shared with the Redis nodes (`app/utils/breaker.py`). `/metrics` exposes `database_guard` counters.
-* **Result (same experiment, new code).** **0 seconds with zero successes, 2 seconds with > 1 s latencies, slowest request 2.0 s (= the deadline), p95 7–10 ms, p99 ≈ 18 ms.** The error *rate* is unchanged (≈ 26 %, the cache misses still
+* **Result (same experiment, new code).** **0 seconds with zero successes, 2–3 seconds with > 1 s latencies, slowest request 2.0 s (= the deadline), p95 7–11 ms, p99 12–18 ms** (final configuration: 0 / 3 / 2.03 s / 9–11 ms / 12–14 ms). The error *rate* is unchanged (≈ 26 %, the cache misses still
   cannot be answered) but errors are immediate 503s instead of 5 s hangs, and cached prefixes keep being served at normal speed during the freeze.
 * **Deliberately NOT guarded: writes.** When a write times out the statement may still execute once the database resumes; re-queueing it would double count. The flush thread therefore keeps its blocking,
   at-most-once behaviour, and the bounded buffer (F-11) limits memory while it waits. Consequence: write latency and event delivery during a freeze are unchanged (events are persisted after recovery — measured in `exp_write_freeze`).
 * **Residual.** Up to 15 worker threads can stay blocked inside hung calls until the database answers or the OS drops the connection (daemon threads, so they never block process exit); the guard does not tear down the hung
   connections. The deadline is a fixed default (2 s) — tune `DB_QUERY_TIMEOUT_SECONDS` for the real query-time distribution.
 * **Tests.** `test_database_guard.py` (7 cases: deadline bound, instant fail with breaker open, bulkhead rejects at once, half-open probe recovery, connection errors trip but SQL errors do not,
-  daemon threads, thread count bounded), `test_api_integration.py::test_hung_database_fails_fast_with_503_while_cached_prefixes_keep_working` (including recovery). Mutants M14, M15 killed.
+  daemon threads, thread count bounded, saturation does not open the breaker or lose the probe, momentary spikes wait up to 50 ms for a slot), `test_api_integration.py::test_hung_database_fails_fast_with_503_while_cached_prefixes_keep_working` (including recovery). Mutants M14, M15 killed.
+* **Cost when healthy.** ≈ +0.4 ms median on the miss path (+9 %, one thread hop), p99 not worse, no spurious 503s in 4 runs at 400 rps all-miss load (`BENCHMARK_RESULTS.md` §7.1). An earlier setting (12 slots, instant rejection) did produce occasional 503s under stalls — found by this measurement and fixed.
 
 ## F-28 — Vulnerable pins  *(Medium)*
 `pip-audit` on the original lock: `starlette 1.2.1` (PYSEC-2026-248/249), `anyio 4.13.0` (4024/4025), `urllib3 2.7.0` (4175-4177), `pydantic-settings 2.14.1` (CVE-2026-58203), `pytest 8.4.2` (1845) — 12 advisories.

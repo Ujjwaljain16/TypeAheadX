@@ -33,7 +33,7 @@ source benchmarks/env.sh
 ```bash
 cd backend
 source ../benchmarks/env.sh                      # sets TAX_TEST_PG_DSN / TAX_TEST_REDIS_NODES
-../.venv/Scripts/python -m pytest tests -q       # 121 tests (62 need no services; 59 integration)
+../.venv/Scripts/python -m pytest tests -q       # 136 tests (71 need no services; 65 integration)
 ../.venv/Scripts/python -m pytest tests -q --cov=app --cov-report=term-missing
 # without the two variables the 58 integration tests are skipped with an explicit reason
 ../.venv/Scripts/python ../benchmarks/mutation_smoke.py     # 12 re-introduced defects, all must be KILLED

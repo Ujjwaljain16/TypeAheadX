@@ -44,8 +44,10 @@ class DatabaseUnavailable(Exception):
 
 
 class DatabaseGuard:
-    def __init__(self, max_concurrency: int = 15, timeout_s: float = 2.0, breaker_seconds: float = 5.0, clock=None):
+    def __init__(self, max_concurrency: int = 15, timeout_s: float = 2.0, breaker_seconds: float = 5.0, clock=None,
+                 slot_wait_s: float = 0.05):
         self.timeout_s = timeout_s
+        self.slot_wait_s = slot_wait_s
         self.max_concurrency = max_concurrency
         self._breaker = CircuitBreaker(breaker_seconds, **({"clock": clock} if clock else {}))
         self._slots = threading.BoundedSemaphore(max_concurrency)
@@ -87,7 +89,8 @@ class DatabaseGuard:
             with self._counter_lock:
                 self.rejected_open += 1
             raise DatabaseUnavailable("database circuit open")
-        if not self._slots.acquire(blocking=False):
+        # brief bounded wait: absorbs momentary concurrency spikes (a stall of a few ms) but never queues behind hung calls
+        if not self._slots.acquire(timeout=self.slot_wait_s):
             with self._counter_lock:
                 self.rejected_saturated += 1
             self._breaker.cancel_probe()     # load, not a sick database: do not open the breaker, just free a probe grant
