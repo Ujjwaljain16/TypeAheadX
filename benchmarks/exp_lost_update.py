@@ -23,7 +23,7 @@ QUERY = "lost update probe"
 
 
 def worker(code_dir: str, rounds: int, per_round: int, barrier, out):
-    os.environ.update(C.audit_env())
+    os.environ.update(C.bench_env())
     sys.path.insert(0, str(Path(code_dir) / "backend"))
     from app.write_buffer.buffer import write_buffer
     from app.write_buffer.batch_worker import batch_worker
@@ -61,7 +61,7 @@ def main():
            "lost_events": expected - got, "lost_pct": round(100 * (expected - got) / expected, 2),
            "seconds": round(time.time() - t0, 1)}
     print(json.dumps(res))
-    out = C.REPO / "audit" / "results" / "experiments"
+    out = C.REPO / "benchmarks" / "results" / "experiments"
     out.mkdir(parents=True, exist_ok=True)
     with open(out / "lost_update.jsonl", "a") as fh:
         fh.write(json.dumps(res) + "\n")

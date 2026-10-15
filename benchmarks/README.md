@@ -33,12 +33,12 @@ no scenario touches any database or Redis other than the ports listed in `env.sh
 | `workload.py` | deterministic stream generators (cascade, uniform/high-cardinality, popular, Zipf) |
 | `loadgen.py` | open-loop asyncio/aiohttp generator (fixed/Poisson/burst arrivals, timed fault events) |
 | `common.py` | server lifecycle, infra counters, environment metadata |
-| `run_bench.py` | one scenario × rates × repetitions → `audit/results/<label>/<scenario>.json` + raw gz |
+| `run_bench.py` | one scenario × rates × repetitions → `benchmarks/results/<label>/<scenario>.json` + raw gz |
 | `run_matrix.sh` / `run_ab.sh` / `run_matrix_ab.sh` | full matrix; interleaved A/B; the headline baseline-vs-final run |
 | `report.py` | tables (median, min–max, bootstrap CI) + CSV |
 | `profile_summary.py` | aggregate a `py-spy record --gil -f raw` file |
 | `exp_*.py` | fault/consistency experiments: lost updates, node down at start-up, write path during a DB freeze, flush duration |
-| `mutation_smoke.py` | re-introduces the audited defects (17 mutants) and checks the test-suite fails |
+| `mutation_smoke.py` | re-introduces defects found earlier (17 mutants) and checks the test-suite fails |
 | `compare.py` | compact before/after table from two result labels |
 | `simulations/` | pure-computation studies (ring ownership, key movement on topology change, write-buffer sizing) — no services needed |
 
@@ -63,7 +63,7 @@ no scenario touches any database or Redis other than the ports listed in `env.sh
 ## Quick start
 
 ```bash
-docker compose -p taxaudit -f benchmarks/docker-compose.bench.yml up -d
+docker compose -p taxbench -f benchmarks/docker-compose.bench.yml up -d
 python -m venv .venv && .venv/Scripts/pip install -r benchmarks/requirements.txt   # (bin/ on Linux/macOS)
 source benchmarks/env.sh
 .venv/Scripts/python backend/ingest.py --dsn "$PG_DSN"            # 150 000 rows
@@ -71,5 +71,5 @@ source benchmarks/env.sh
 .venv/Scripts/python benchmarks/report.py --labels mine --ci
 ```
 
-To compare against the pre-audit code: `git archive a45f129 | tar -x -C /some/dir` and pass that directory
-as another `--code`. See `audit/REPRODUCING.md` for the complete procedure.
+To compare against the original code: `git archive a45f129 | tar -x -C /some/dir` and pass that directory
+as another `--code`. See `benchmarks/REPRODUCING.md` for the complete procedure.

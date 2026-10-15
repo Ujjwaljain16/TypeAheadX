@@ -64,10 +64,10 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Install (fails on non-Linux-installable pins, see audit finding F-20)
+      - name: Install (fails on non-Linux-installable pins, see docs/postmortems.md #9)
         run: npm ci --no-audit --no-fund
       - run: npx tsc --noEmit
-      - name: Lint (2 pre-existing react-hooks/set-state-in-effect errors are tracked, not gating yet)
-        run: npm run lint
-        continue-on-error: true
+      - run: npm run lint
+      - name: Unit tests (cancellation, out-of-order responses, debounce-driven fetching)
+        run: npm test
       - run: npm run build

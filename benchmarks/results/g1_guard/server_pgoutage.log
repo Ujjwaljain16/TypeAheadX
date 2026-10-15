@@ -1,0 +1,23 @@
+2026-10-16 01:39:56,995 [INFO] app.main: Initializing Cache...
+2026-10-16 01:39:57,089 [INFO] app.cache.factory: CacheFactory: Using Distributed Redis cache
+2026-10-16 01:39:57,125 [INFO] app.cache.redis_node: Connected to Redis node localhost:47379 at localhost:47379
+2026-10-16 01:39:57,140 [INFO] app.cache.redis_node: Connected to Redis node localhost:47380 at localhost:47380
+2026-10-16 01:39:57,147 [INFO] app.cache.redis_node: Connected to Redis node localhost:47381 at localhost:47381
+2026-10-16 01:39:57,148 [INFO] app.main: Starting Batch Worker...
+2026-10-16 01:39:57,148 [INFO] app.write_buffer.batch_worker: Batch worker started.
+2026-10-16 01:39:57,148 [INFO] app.main: Warming up cache for A-Z prefixes...
+2026-10-16 01:39:57,402 [INFO] app.main: Cache warmup complete.
+2026-10-16 01:40:31,202 [ERROR] app.database.guard: database call exceeded 2.0s; circuit opened
+2026-10-16 01:40:31,218 [ERROR] app.database.guard: database call exceeded 2.0s; circuit opened
+2026-10-16 01:40:31,249 [ERROR] app.database.guard: database call exceeded 2.0s; circuit opened
+2026-10-16 01:40:31,295 [ERROR] app.database.guard: database call exceeded 2.0s; circuit opened
+2026-10-16 01:40:31,312 [ERROR] app.database.guard: database call exceeded 2.0s; circuit opened
+2026-10-16 01:40:31,327 [ERROR] app.database.guard: database call exceeded 2.0s; circuit opened
+2026-10-16 01:40:31,342 [ERROR] app.database.guard: database call exceeded 2.0s; circuit opened
+2026-10-16 01:40:31,421 [ERROR] app.database.guard: database call exceeded 2.0s; circuit opened
+2026-10-16 01:40:31,437 [ERROR] app.database.guard: database call exceeded 2.0s; circuit opened
+2026-10-16 01:40:31,467 [ERROR] app.database.guard: database call exceeded 2.0s; circuit opened
+2026-10-16 01:40:31,483 [ERROR] app.database.guard: database call exceeded 2.0s; circuit opened
+2026-10-16 01:40:31,560 [ERROR] app.database.guard: database call exceeded 2.0s; circuit opened
+2026-10-16 01:40:44,580 [ERROR] app.database.guard: database call exceeded 2.0s; circuit opened
+2026-10-16 01:40:50,039 [INFO] app.database.guard: database recovered; circuit closed

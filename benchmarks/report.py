@@ -1,6 +1,6 @@
 """Aggregate benchmark JSON/raw files into Markdown tables + CSV.
 
-  python benchmarks/report.py --labels baseline final --out audit/results/summary
+  python benchmarks/report.py --labels baseline final --out benchmarks/results/summary
 Uncertainty: per (label, scenario, rate) we show the median and min-max over repetitions, and a
 95% block-bootstrap CI (1-second blocks, 1000 resamples, pooled over repetitions) for p50 and p99
 computed from the raw per-request files.
@@ -18,7 +18,7 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
-RES = REPO / "audit" / "results"
+RES = REPO / "benchmarks" / "results"
 
 
 def load_raw(rel: str):

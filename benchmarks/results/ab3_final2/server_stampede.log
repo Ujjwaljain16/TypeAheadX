@@ -1,0 +1,9 @@
+2026-10-16 00:17:34,200 [INFO] app.main: Initializing Cache...
+2026-10-16 00:17:34,286 [INFO] app.cache.factory: CacheFactory: Using Distributed Redis cache
+2026-10-16 00:17:34,300 [INFO] app.cache.redis_node: Connected to Redis node localhost:47379 at localhost:47379
+2026-10-16 00:17:34,307 [INFO] app.cache.redis_node: Connected to Redis node localhost:47380 at localhost:47380
+2026-10-16 00:17:34,316 [INFO] app.cache.redis_node: Connected to Redis node localhost:47381 at localhost:47381
+2026-10-16 00:17:34,316 [INFO] app.main: Starting Batch Worker...
+2026-10-16 00:17:34,317 [INFO] app.write_buffer.batch_worker: Batch worker started.
+2026-10-16 00:17:34,317 [INFO] app.main: Warming up cache for A-Z prefixes...
+2026-10-16 00:17:34,481 [INFO] app.main: Cache warmup complete.

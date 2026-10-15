@@ -10,7 +10,7 @@ A search-autocomplete service built as a **system design study**: prefix suggest
 | **Data** | 150 000 real queries with popularity counts (AmazonQAC-derived) |
 | **Hit path** | p50 **1.2 ms** @ 300 rps, p99 2 ms (one worker, one laptop, warm cache) |
 | **Failure behaviour** | one Redis node lost → **0 % errors**; Postgres frozen → cache hits keep working, misses fail in ≤ 2 s |
-| **Evidence** | [`audit/`](./audit/FINAL_REPORT.md) — 31 findings, interleaved A/B benchmarks, 136 tests, CI |
+| **Evidence** | [`audit/`](./docs/postmortems.md) — 31 findings, interleaved A/B benchmarks, 136 tests, CI |
 
 ## 1. The problem
 
@@ -64,7 +64,7 @@ Details: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) · decisions: [`docs/a
 
 ## 4. What the numbers say
 
-Method matters more than the numbers: **open-loop load generator** (latency measured from the *intended* send time, avoiding coordinated omission), seeded dataset-derived workloads, **interleaved baseline-vs-final runs** (the machine drifts by 2× over hours), 3 repetitions, bootstrap CIs. Full methodology and caveats: [`docs/benchmarks.md`](./docs/benchmarks.md) and [`audit/BENCHMARK_RESULTS.md`](./audit/BENCHMARK_RESULTS.md).
+Method matters more than the numbers: **open-loop load generator** (latency measured from the *intended* send time, avoiding coordinated omission), seeded dataset-derived workloads, **interleaved baseline-vs-final runs** (the machine drifts by 2× over hours), 3 repetitions, bootstrap CIs. Full methodology and caveats: [`docs/benchmarks.md`](./docs/benchmarks.md) and [`docs/benchmark-details.md`](./docs/benchmark-details.md).
 
 Original code vs. current, one uvicorn worker, one 16-thread Windows laptop with Redis/PostgreSQL in Docker:
 
@@ -80,7 +80,7 @@ Original code vs. current, one uvicorn worker, one 16-thread Windows laptop with
 | Flush of 100 queries | ≈ 500 ms | **≈ 14 ms** |
 | 6 concurrent flushers | 67–70 % of updates lost | **0 %** |
 
-Honest limits: single machine, single worker, loopback + Docker Desktop, synthetic typing behaviour (real query strings and popularity, invented keystroke traffic). Multi-worker scaling, Linux, million-row datasets and soak tests are **not measured** ([`audit/CAPACITY_AND_LIMITS.md`](./audit/CAPACITY_AND_LIMITS.md)).
+Honest limits: single machine, single worker, loopback + Docker Desktop, synthetic typing behaviour (real query strings and popularity, invented keystroke traffic). Multi-worker scaling, Linux, million-row datasets and soak tests are **not measured** ([`docs/capacity-and-limits.md`](./docs/capacity-and-limits.md)).
 
 ## 5. Failure behaviour
 
@@ -133,4 +133,4 @@ data/               the 150 000-row query corpus and how it was derived
 
 The short version (full list with evidence in [`docs/lessons-learned.md`](./docs/lessons-learned.md)): the headline features (cache invalidation, node-failure tolerance, horizontal write scaling, trending ranking) all *looked* implemented and were not — until each was tested by breaking it. Library defaults (redis-py's 3× retry) turned a 250 ms timeout into 5–8 s. Closed-loop benchmarks and unreplicated runs would have hidden all of it.
 
-> `docs/archive/Project_Report.md` is the original (pre-audit) project report; several of its figures are superseded — see [`audit/FINAL_REPORT.md`](./audit/FINAL_REPORT.md) §6.
+> `docs/archive/Project_Report.md` is the original (pre-audit) project report; several of its figures are superseded — see [`docs/postmortems.md`](./docs/postmortems.md) §6.

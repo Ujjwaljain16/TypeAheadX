@@ -1,0 +1,15 @@
+2026-10-15 21:43:00,058 [INFO] app.cache.factory: CacheFactory: Using Distributed Redis cache
+2026-10-15 21:43:00,072 [INFO] app.cache.redis_node: Connected to Redis node localhost:47379 at localhost:47379
+2026-10-15 21:43:00,104 [INFO] app.cache.redis_node: Connected to Redis node localhost:47380 at localhost:47380
+2026-10-15 21:43:00,131 [INFO] app.cache.redis_node: Connected to Redis node localhost:47381 at localhost:47381
+2026-10-15 21:43:00,205 [INFO] app.main: Initializing Cache...
+2026-10-15 21:43:00,205 [INFO] app.main: Starting Batch Worker...
+2026-10-15 21:43:00,206 [INFO] app.write_buffer.batch_worker: Batch worker started.
+2026-10-15 21:43:00,206 [INFO] app.main: Warming up cache for A-Z prefixes...
+2026-10-15 21:43:00,206 [ERROR] asyncio: Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<warm_up_cache() done, defined at C:\Users\ujjwa\AppData\Local\Temp\claude\D--Projects-Hack-TypeAheadX\8fbbf636-268a-44f4-a0a2-f9b767befe07\scratchpad\baseline\backend\app\main.py:41> exception=TypeError("QueryRepository.__init__() missing 1 required positional argument: 'session_factory'")>
+Traceback (most recent call last):
+  File "C:\Users\ujjwa\AppData\Local\Temp\claude\D--Projects-Hack-TypeAheadX\8fbbf636-268a-44f4-a0a2-f9b767befe07\scratchpad\baseline\backend\app\main.py", line 47, in warm_up_cache
+    repository = QueryRepository()
+                 ^^^^^^^^^^^^^^^^^
+TypeError: QueryRepository.__init__() missing 1 required positional argument: 'session_factory'

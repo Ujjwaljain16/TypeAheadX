@@ -6,8 +6,8 @@ Example:
 
 Each (rate, repetition) point restarts the API server (fresh process, fresh pool,
 fresh in-process metrics) and resets Redis (and DB statistics) so that points are
-independent. Results are written to audit/results/<label>/<scenario>.json plus a
-gzip CSV of every measured request under audit/results/<label>/raw/.
+independent. Results are written to benchmarks/results/<label>/<scenario>.json plus a
+gzip CSV of every measured request under benchmarks/results/<label>/raw/.
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ import common as C  # noqa: E402
 import workload as W  # noqa: E402
 from loadgen import run_open_loop  # noqa: E402
 
-RESULTS = C.REPO / "audit" / "results"
+RESULTS = C.REPO / "benchmarks" / "results"
 
 _DS = None
 
@@ -103,8 +103,8 @@ def app_cache_metrics():
 
 def run_point(args, scenario: str, rate: float, rep: int, extra_env: dict, events_fn=None, tag="") -> dict:
     server = C.Server(Path(args.code), workers=args.workers, extra_env={**SERVER_ENV.get(scenario, {}), **extra_env},
-                      log_path=C.REPO / "audit" / "results" / args.label / f"server_{scenario}.log")
-    (C.REPO / "audit" / "results" / args.label).mkdir(parents=True, exist_ok=True)
+                      log_path=C.REPO / "benchmarks" / "results" / args.label / f"server_{scenario}.log")
+    (C.REPO / "benchmarks" / "results" / args.label).mkdir(parents=True, exist_ok=True)
     if scenario in ("rw",):
         C.reload_dataset()
     C.flush_redis()
@@ -171,7 +171,7 @@ def stampede(args, rep: int) -> dict:
     keys = list(dict.fromkeys(keys))[:20]
     N = args.stampede_n
     server = C.Server(Path(args.code), workers=args.workers, extra_env={},
-                      log_path=C.REPO / "audit" / "results" / args.label / "server_stampede.log")
+                      log_path=C.REPO / "benchmarks" / "results" / args.label / "server_stampede.log")
     C.flush_redis(); C.reset_pg_stats(); server.start()
     results = []
 
@@ -189,7 +189,7 @@ def stampede(args, rep: int) -> dict:
 
     def prefix_statements(since_ts: float) -> int:
         """Exact count of executed prefix SELECTs, from the PostgreSQL statement log."""
-        o = subprocess.run(["docker", "logs", "--since", str(int(since_ts)), "taxaudit-postgres"], capture_output=True, text=True)
+        o = subprocess.run(["docker", "logs", "--since", str(int(since_ts)), "taxbench-postgres"], capture_output=True, text=True)
         return (o.stdout + o.stderr).count("WHERE query LIKE")
 
     def prefix_scans():
@@ -279,13 +279,13 @@ def main():
                 events_fn, log = None, []
                 if args.scenario in ("outage", "pgoutage"):
                     args.timeline = True
-                    cont = args.outage_container or ("taxaudit-postgres" if args.scenario == "pgoutage" else "taxaudit-redis-b")
+                    cont = args.outage_container or ("taxbench-postgres" if args.scenario == "pgoutage" else "taxbench-redis-b")
                     mode = args.outage_mode or ("pause" if args.scenario == "pgoutage" else "stop")
                     events_fn = lambda: outage_events(cont, args.outage_down, args.outage_up, log, mode)  # noqa: E731
                 r = run_point(args, args.scenario, rate, rep + args.rep_offset, extra_env, events_fn, args.tag)
                 if log:
                     r["outage_log"] = log
-                    for c in ("taxaudit-redis-b", "taxaudit-postgres"):   # always leave the stack healthy
+                    for c in ("taxbench-redis-b", "taxbench-postgres"):   # always leave the stack healthy
                         subprocess.run(["docker", "unpause", c], capture_output=True)
                         subprocess.run(["docker", "start", c], capture_output=True)
                 runs.append(r)

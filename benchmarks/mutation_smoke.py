@@ -1,4 +1,4 @@
-"""Selective mutation testing: re-introduce each defect found in the audit into a throw-away copy of
+"""Selective mutation testing: re-introduce each defect found during the project into a throw-away copy of
 backend/ and check that the test-suite FAILS (mutant killed). A surviving mutant means the suite cannot
 detect that regression.   python benchmarks/mutation_smoke.py   (needs the integration env, see env.sh)
 """
@@ -42,7 +42,7 @@ MUTANTS = [
      "    ORDER BY t.q\n", "", ["tests/test_repository_pg.py"]),
     ("M10", "node-down-at-startup never retried (original F-008)", "app/utils/breaker.py",
      "self._open_until = self._clock() + self.open_seconds * jitter", "self._open_until = float('inf')", ["tests/test_cache_resilience.py"]),
-    ("M13", "redis client keeps the library's default retries (outage amplification, found during the audit)", "app/cache/redis_node.py",
+    ("M13", "redis client keeps the library's default retries (outage amplification, found during the project)", "app/cache/redis_node.py",
      "retry=Retry(NoBackoff(), 0),", "", ["tests/test_cache_resilience.py"]),
     ("M14", "database read has no deadline (F-27)", "app/database/guard.py",
      "fut.result(timeout=self.timeout_s)", "fut.result()", ["tests/test_database_guard.py"]),
@@ -82,7 +82,7 @@ def main():
             print(mid, status, desc, flush=True)
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
-    out = REPO / "audit" / "results" / "experiments"
+    out = REPO / "benchmarks" / "results" / "experiments"
     out.mkdir(parents=True, exist_ok=True)
     (out / "mutation_smoke.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
     killed = sum(r["status"] == "KILLED" for r in results)

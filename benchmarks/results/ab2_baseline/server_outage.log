@@ -1,0 +1,55 @@
+2026-10-15 23:57:53,641 [INFO] app.cache.factory: CacheFactory: Using Distributed Redis cache
+2026-10-15 23:57:53,656 [INFO] app.cache.redis_node: Connected to Redis node localhost:47379 at localhost:47379
+2026-10-15 23:57:53,673 [INFO] app.cache.redis_node: Connected to Redis node localhost:47380 at localhost:47380
+2026-10-15 23:57:53,707 [INFO] app.cache.redis_node: Connected to Redis node localhost:47381 at localhost:47381
+2026-10-15 23:57:53,783 [INFO] app.main: Initializing Cache...
+2026-10-15 23:57:53,783 [INFO] app.main: Starting Batch Worker...
+2026-10-15 23:57:53,784 [INFO] app.write_buffer.batch_worker: Batch worker started.
+2026-10-15 23:57:53,784 [INFO] app.main: Warming up cache for A-Z prefixes...
+2026-10-15 23:57:53,784 [ERROR] asyncio: Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<warm_up_cache() done, defined at C:\Users\ujjwa\AppData\Local\Temp\claude\D--Projects-Hack-TypeAheadX\8fbbf636-268a-44f4-a0a2-f9b767befe07\scratchpad\baseline\backend\app\main.py:41> exception=TypeError("QueryRepository.__init__() missing 1 required positional argument: 'session_factory'")>
+Traceback (most recent call last):
+  File "C:\Users\ujjwa\AppData\Local\Temp\claude\D--Projects-Hack-TypeAheadX\8fbbf636-268a-44f4-a0a2-f9b767befe07\scratchpad\baseline\backend\app\main.py", line 47, in warm_up_cache
+    repository = QueryRepository()
+                 ^^^^^^^^^^^^^^^^^
+TypeError: QueryRepository.__init__() missing 1 required positional argument: 'session_factory'
+2026-10-15 23:58:43,960 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:d: Timeout reading from socket
+2026-10-15 23:58:44,009 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:dura: Timeout reading from socket
+2026-10-15 23:58:44,881 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:cott: Timeout reading from socket
+2026-10-15 23:58:44,929 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:foldable d: Timeout reading from socket
+2026-10-15 23:58:45,056 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:math manipulativ: Timeout reading from socket
+2026-10-15 23:58:45,072 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:fo: Timeout reading from socket
+2026-10-15 23:58:45,104 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:l: Timeout reading from socket
+2026-10-15 23:58:45,136 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:wildfire h: Timeout reading from socket
+2026-10-15 23:58:45,264 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:sal: Timeout reading from socket
+2026-10-15 23:58:45,295 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:duradry d: Timeout reading from socket
+2026-10-15 23:58:45,406 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:can: Timeout reading from socket
+2026-10-15 23:58:45,485 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:du: Timeout reading from socket
+2026-10-15 23:58:45,485 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:wo: Timeout reading from socket
+2026-10-15 23:58:45,500 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:sa: Timeout reading from socket
+2026-10-15 23:58:45,501 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:w: Timeout reading from socket
+2026-10-15 23:58:45,705 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:suction: Timeout reading from socket
+2026-10-15 23:58:45,706 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:cotton: Timeout reading from socket
+2026-10-15 23:58:45,753 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:yoga: Timeout reading from socket
+2026-10-15 23:58:45,785 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:detergent: Timeout reading from socket
+2026-10-15 23:58:45,880 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:usa: Timeout reading from socket
+2026-10-15 23:58:45,897 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:suction: Timeout reading from socket
+2026-10-15 23:58:45,928 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:prism: Timeout reading from socket
+2026-10-15 23:58:45,944 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:water b: Timeout reading from socket
+2026-10-15 23:58:46,007 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:wildfire han: Timeout reading from socket
+2026-10-15 23:58:46,055 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:suction c: Timeout reading from socket
+2026-10-15 23:58:46,055 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:duradr: Timeout reading from socket
+2026-10-15 23:58:46,071 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:lemon juice: Timeout reading from socket
+2026-10-15 23:58:46,087 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:durad: Timeout reading from socket
+2026-10-15 23:58:46,088 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:canned: Timeout reading from socket
+2026-10-15 23:58:46,166 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:ring floo: Timeout reading from socket
+2026-10-15 23:58:46,214 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:us: Timeout reading from socket
+2026-10-15 23:58:46,261 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:wome: Timeout reading from socket
+2026-10-15 23:58:46,261 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:foldab: Timeout reading from socket
+2026-10-15 23:58:46,277 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:dur: Timeout reading from socket
+2026-10-15 23:58:46,324 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:lemon jui: Timeout reading from socket
+2026-10-15 23:58:46,372 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:cann: Timeout reading from socket
+2026-10-15 23:58:46,468 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:foldable des: Timeout reading from socket
+2026-10-15 23:58:46,500 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:canned: Timeout reading from socket
+2026-10-15 23:58:46,707 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:lem: Timeout reading from socket
+2026-10-15 23:58:46,992 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:usa: Timeout reading from socket

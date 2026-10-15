@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b45309"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="720" rx="18" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="600" y="42" text-anchor="middle" font-size="26" font-weight="700" fill="#0f172a">TypeAheadX — request flow and failure boundaries</text>
+  <text x="600" y="68" text-anchor="middle" font-size="14" fill="#475569">Every dashed badge is a protection that was added after the failure it prevents was reproduced and measured.</text>
+
+  <!-- Browser -->
+  <rect x="30" y="250" width="190" height="150" rx="12" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+  <text x="125" y="282" text-anchor="middle" font-size="17" font-weight="700" fill="#312e81">Browser</text>
+  <text x="125" y="310" text-anchor="middle" font-size="13" fill="#3730a3">debounce 250 ms</text>
+  <text x="125" y="330" text-anchor="middle" font-size="13" fill="#3730a3">abort in-flight request</text>
+  <text x="125" y="350" text-anchor="middle" font-size="13" fill="#3730a3">ignore stale responses</text>
+  <text x="125" y="378" text-anchor="middle" font-size="13" fill="#3730a3">keyboard + ARIA combobox</text>
+
+  <!-- API container -->
+  <rect x="290" y="95" width="450" height="500" rx="16" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+  <text x="515" y="122" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">FastAPI process (thread pool)</text>
+
+  <rect x="315" y="140" width="400" height="165" rx="10" fill="#ecfeff" stroke="#0891b2" stroke-width="2"/>
+  <text x="335" y="166" font-size="15" font-weight="700" fill="#155e75">READ  GET /suggest?q=</text>
+  <text x="335" y="190" font-size="13" fill="#164e63">1  normalise (NFC · lower · collapse spaces), validate</text>
+  <text x="335" y="212" font-size="13" fill="#164e63">2  GET suggestion:&lt;prefix&gt; on the ring-owned Redis node</text>
+  <text x="335" y="234" font-size="13" fill="#164e63">3  miss → single-flight: ONE query for N concurrent misses</text>
+  <text x="335" y="256" font-size="13" fill="#164e63">4  rank = history + β·recent·e^(−λ·hours), LIMIT 10</text>
+  <text x="335" y="278" font-size="13" fill="#164e63">5  SET (TTL 300 s, empty results cached too)</text>
+
+  <rect x="315" y="325" width="400" height="95" rx="10" fill="#fefce8" stroke="#ca8a04" stroke-width="2"/>
+  <text x="335" y="351" font-size="15" font-weight="700" fill="#854d0e">WRITE  POST /search</text>
+  <text x="335" y="375" font-size="13" fill="#713f12">validate (≤ 200 chars, body ≤ 16 KiB) → in-memory counter</text>
+  <text x="335" y="397" font-size="13" fill="#713f12">bounded buffer (50 000 distinct) → 200 now, 503 when full</text>
+
+  <rect x="315" y="440" width="400" height="135" rx="10" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+  <text x="335" y="466" font-size="15" font-weight="700" fill="#9a3412">FLUSH thread  (every 10 s or 100 distinct)</text>
+  <text x="335" y="490" font-size="13" fill="#7c2d12">one atomic SQL upsert: count += δ under row lock</text>
+  <text x="335" y="512" font-size="13" fill="#7c2d12">fails → bisect bad row / re-queue the rest (never double-count)</text>
+  <text x="335" y="534" font-size="13" fill="#7c2d12">then DEL all cached prefixes of the flushed queries</text>
+  <text x="335" y="556" font-size="13" fill="#7c2d12">crash ⇒ lose ≤ ~10 s of increments (accepted, ADR-006)</text>
+
+  <!-- Redis ring -->
+  <rect x="850" y="95" width="320" height="235" rx="14" fill="#fef2f2" stroke="#dc2626" stroke-width="2"/>
+  <text x="1010" y="122" text-anchor="middle" font-size="16" font-weight="700" fill="#991b1b">Redis × 3  (consistent-hash ring)</text>
+  <text x="1010" y="142" text-anchor="middle" font-size="11" fill="#7f1d1d">MD5 · 500 vnodes per node · +1 node moves ≈26 % of keys</text>
+  <rect x="870" y="160" width="84" height="56" rx="8" fill="#fee2e2" stroke="#dc2626"/><text x="912" y="194" text-anchor="middle" font-size="14" font-weight="600" fill="#7f1d1d">node A</text>
+  <rect x="968" y="160" width="84" height="56" rx="8" fill="#fee2e2" stroke="#dc2626"/><text x="1010" y="194" text-anchor="middle" font-size="14" font-weight="600" fill="#7f1d1d">node B</text>
+  <rect x="1066" y="160" width="84" height="56" rx="8" fill="#fee2e2" stroke="#dc2626"/><text x="1108" y="194" text-anchor="middle" font-size="14" font-weight="600" fill="#7f1d1d">node C</text>
+  <rect x="868" y="238" width="284" height="74" rx="8" fill="#ffffff" stroke="#b45309" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="1010" y="260" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">per-node circuit breaker</text>
+  <text x="1010" y="280" text-anchor="middle" font-size="12" fill="#92400e">250 ms timeout · client retries OFF</text>
+  <text x="1010" y="299" text-anchor="middle" font-size="12" fill="#92400e">lose a node ⇒ its keys are misses, 0 errors</text>
+
+  <!-- PostgreSQL -->
+  <rect x="850" y="380" width="320" height="215" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <text x="1010" y="408" text-anchor="middle" font-size="16" font-weight="700" fill="#166534">PostgreSQL 15 — source of truth</text>
+  <text x="1010" y="432" text-anchor="middle" font-size="12" fill="#14532d">queries(query UNIQUE, historical_count,</text>
+  <text x="1010" y="449" text-anchor="middle" font-size="12" fill="#14532d">recent_count, last_decay_at)</text>
+  <text x="1010" y="469" text-anchor="middle" font-size="12" fill="#14532d">text_pattern_ops → LIKE 'pre%' is an index range scan</text>
+  <rect x="868" y="488" width="284" height="92" rx="8" fill="#ffffff" stroke="#b45309" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="1010" y="510" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">database guard (reads only)</text>
+  <text x="1010" y="530" text-anchor="middle" font-size="12" fill="#92400e">2 s deadline · ≤ 15 in flight · circuit breaker</text>
+  <text x="1010" y="549" text-anchor="middle" font-size="12" fill="#92400e">frozen DB ⇒ misses fail in ≤ 2 s (503),</text>
+  <text x="1010" y="566" text-anchor="middle" font-size="12" fill="#92400e">cache hits keep being served</text>
+
+  <!-- arrows -->
+  <path d="M220,300 L315,225" stroke="#334155" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="228" y="252" font-size="12" fill="#334155" transform="rotate(-33 228 252)">GET</text>
+  <path d="M220,355 L315,372" stroke="#334155" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="226" y="396" font-size="12" fill="#334155">POST (on select)</text>
+  <path d="M715,205 L850,205" stroke="#334155" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="755" y="196" font-size="12" fill="#334155">GET / SET</text>
+  <path d="M715,285 L850,415" stroke="#334155" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="752" y="360" font-size="12" fill="#334155" transform="rotate(44 752 360)">miss: 1 query</text>
+  <path d="M515,420 L515,440" stroke="#334155" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M715,510 C800,510 800,520 850,520" stroke="#334155" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="770" y="545" font-size="12" fill="#334155">upsert</text>
+  <path d="M715,478 C790,478 800,330 868,300" stroke="#b45309" stroke-width="2.2" stroke-dasharray="7 4" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="722" y="466" font-size="12" fill="#92400e">DEL prefixes</text>
+
+  <!-- measured results strip -->
+  <rect x="30" y="618" width="1140" height="82" rx="12" fill="#0f172a"/>
+  <text x="50" y="644" font-size="13" fill="#94a3b8">Measured (open-loop load, interleaved baseline-vs-final runs, one worker on a laptop):</text>
+  <text x="50" y="672" font-size="15" font-weight="600" fill="#f8fafc">hit path p50 1.2 ms @ 300 rps</text>
+  <text x="330" y="672" font-size="15" font-weight="600" fill="#f8fafc">Redis node lost: 36 % → 0 % errors</text>
+  <text x="690" y="672" font-size="15" font-weight="600" fill="#f8fafc">DB frozen: 14 s → 0 s outage</text>
+  <text x="950" y="672" font-size="15" font-weight="600" fill="#f8fafc">200 misses → 1 query</text>
+</svg>

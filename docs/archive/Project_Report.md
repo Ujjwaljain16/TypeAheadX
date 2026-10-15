@@ -1,4 +1,4 @@
-> **Archived.** This is the original (pre-audit) project report, kept for history. Several figures and statements in it are superseded or were not supported by later measurement (e.g. cache invalidation, node-failure behaviour, the 97 % hit rate, "100 000 concurrent requests"). The current, evidence-backed description is in the [README](../../README.md), [`docs/`](../) and [`audit/FINAL_REPORT.md`](../../audit/FINAL_REPORT.md) §6.
+> **Archived.** This is the original (pre-audit) project report, kept for history. Several figures and statements in it are superseded or were not supported by later measurement (e.g. cache invalidation, node-failure behaviour, the 97 % hit rate, "100 000 concurrent requests"). The current, evidence-backed description is in the [README](../../README.md), [`docs/`](../) and [`docs/postmortems.md`](../postmortems.md) §6.
 
 # Project Report: TypeAheadX Scalable Search Autocomplete System
 

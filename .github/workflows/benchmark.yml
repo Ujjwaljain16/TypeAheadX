@@ -1,0 +1,62 @@
+name: Benchmark (Linux, shared runner)
+
+# Manual / branch-triggered: GitHub-hosted runners are shared and noisy, so ONLY same-session interleaved
+# comparisons (baseline vs current, alternating per repetition) are meaningful - never absolute numbers.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["bench/**"]
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: postgres, POSTGRES_DB: typeaheadx}
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20
+      redis-a: {image: "redis:7-alpine", ports: ["6379:6379"]}
+      redis-b: {image: "redis:7-alpine", ports: ["6380:6379"]}
+      redis-c: {image: "redis:7-alpine", ports: ["6381:6379"]}
+    env:
+      PG_DSN: postgresql://postgres:postgres@localhost:5432/typeaheadx
+      TAXB_REDIS_PORTS: "6379,6380,6381"
+      PY: python
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11", cache: pip, cache-dependency-path: backend/requirements-lock.txt}
+      - name: Install (pinned runtime + benchmark tooling)
+        run: pip install -r backend/requirements-lock.txt aiohttp numpy psutil requests
+      - name: Original code (commit a45f129) next to the current code
+        run: |
+          mkdir -p "$RUNNER_TEMP/baseline"
+          git archive a45f129 | tar -x -C "$RUNNER_TEMP/baseline"
+      - name: Machine description
+        run: |
+          nproc; free -m | head -2; python --version; uname -r
+          echo "cpu_model: $(grep -m1 'model name' /proc/cpuinfo)"
+      - name: Load dataset
+        run: python backend/ingest.py --dsn "$PG_DSN"
+      - name: Run the interleaved matrix
+        run: bash benchmarks/ci_matrix.sh "$RUNNER_TEMP/baseline" "$GITHUB_WORKSPACE"
+      - name: Tables
+        if: always()
+        run: |
+          python benchmarks/compare.py lx1_baseline lx1_final benchmarks/results/summary_linux_w1.md
+          python benchmarks/compare.py lx2_baseline lx2_final benchmarks/results/summary_linux_w2.md || true
+          python benchmarks/report.py --labels lx1_baseline lx1_final lx2_baseline lx2_final --out benchmarks/results/summary_linux || true
+          cat benchmarks/results/summary_linux_w1.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: linux-benchmark-results
+          path: |
+            benchmarks/results/lx1_*
+            benchmarks/results/lx2_*
+            benchmarks/results/summary_linux*
+          retention-days: 30

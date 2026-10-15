@@ -9,9 +9,8 @@ import { SuggestionDropdown } from "./SuggestionDropdown";
 export function SearchInput() {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(null);
-  
+
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -19,10 +18,15 @@ export function SearchInput() {
   // No suggestion fetch for text that was just selected (submittedQuery is cleared again on the next keystroke).
   const { suggestions, isLoading, error } = useSuggestions(debouncedQuery, submittedQuery);
 
-  // Reset selected index when suggestions change
-  useEffect(() => {
-    setSelectedIndex(-1);
-  }, [suggestions]);
+  // The highlighted row belongs to one specific suggestion list. When a new list arrives the highlight is
+  // reset by *derivation* (the stored list no longer matches) instead of by a setState inside an effect.
+  const [selection, setSelection] = useState({ list: suggestions, index: -1 });
+  const selectedIndex = selection.list === suggestions ? selection.index : -1;
+  const setSelectedIndex = (next: number | ((prev: number) => number)) =>
+    setSelection((prev) => {
+      const current = prev.list === suggestions ? prev.index : -1;
+      return { list: suggestions, index: typeof next === "function" ? next(current) : next };
+    });
 
   // Handle clicks outside the component to close the dropdown
   useEffect(() => {

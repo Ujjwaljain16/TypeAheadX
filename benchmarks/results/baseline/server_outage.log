@@ -1,0 +1,48 @@
+2026-10-15 19:22:36,433 [INFO] app.cache.factory: CacheFactory: Using Distributed Redis cache
+2026-10-15 19:22:36,468 [INFO] app.cache.redis_node: Connected to Redis node localhost:47379 at localhost:47379
+2026-10-15 19:22:36,485 [INFO] app.cache.redis_node: Connected to Redis node localhost:47380 at localhost:47380
+2026-10-15 19:22:36,500 [INFO] app.cache.redis_node: Connected to Redis node localhost:47381 at localhost:47381
+2026-10-15 19:22:36,563 [INFO] app.main: Initializing Cache...
+2026-10-15 19:22:36,563 [INFO] app.main: Starting Batch Worker...
+2026-10-15 19:22:36,564 [INFO] app.write_buffer.batch_worker: Batch worker started.
+2026-10-15 19:22:36,564 [INFO] app.main: Warming up cache for A-Z prefixes...
+2026-10-15 19:22:36,564 [ERROR] asyncio: Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<warm_up_cache() done, defined at C:\Users\ujjwa\AppData\Local\Temp\claude\D--Projects-Hack-TypeAheadX\8fbbf636-268a-44f4-a0a2-f9b767befe07\scratchpad\baseline\backend\app\main.py:41> exception=TypeError("QueryRepository.__init__() missing 1 required positional argument: 'session_factory'")>
+Traceback (most recent call last):
+  File "C:\Users\ujjwa\AppData\Local\Temp\claude\D--Projects-Hack-TypeAheadX\8fbbf636-268a-44f4-a0a2-f9b767befe07\scratchpad\baseline\backend\app\main.py", line 47, in warm_up_cache
+    repository = QueryRepository()
+                 ^^^^^^^^^^^^^^^^^
+TypeError: QueryRepository.__init__() missing 1 required positional argument: 'session_factory'
+2026-10-15 19:23:24,270 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:fo: Timeout connecting to server
+2026-10-15 19:23:24,461 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:wo: Timeout connecting to server
+2026-10-15 19:23:24,984 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:w: Timeout connecting to server
+2026-10-15 19:23:25,047 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:l: Timeout connecting to server
+2026-10-15 19:23:26,700 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:durad: Timeout connecting to server
+2026-10-15 19:23:26,764 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:wildfire h: Timeout connecting to server
+2026-10-15 19:23:27,066 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:dur: Timeout connecting to server
+2026-10-15 19:23:27,113 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:usa: Timeout connecting to server
+2026-10-15 19:23:27,129 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:sa: Timeout connecting to server
+2026-10-15 19:23:27,161 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:cotton: Timeout connecting to server
+2026-10-15 19:23:27,256 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:wildfire han: Timeout connecting to server
+2026-10-15 19:23:27,256 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:sal: Timeout connecting to server
+2026-10-15 19:23:27,352 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:lem: Timeout connecting to server
+2026-10-15 19:23:27,384 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:suction: Timeout connecting to server
+2026-10-15 19:23:27,494 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:water b: Timeout connecting to server
+2026-10-15 19:23:27,748 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:du: Timeout connecting to server
+2026-10-15 19:23:27,907 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:wome: Timeout connecting to server
+2026-10-15 19:23:27,922 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:suction c: Timeout connecting to server
+2026-10-15 19:23:28,191 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:duradr: Timeout connecting to server
+2026-10-15 19:23:29,326 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:cann: Timeout connecting to server
+2026-10-15 19:23:29,326 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:us: Timeout connecting to server
+2026-10-15 19:23:29,486 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:lemon jui: Timeout connecting to server
+2026-10-15 19:23:29,819 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:dura: Timeout connecting to server
+2026-10-15 19:23:29,851 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:d: Timeout connecting to server
+2026-10-15 19:23:30,202 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:duradry d: Timeout connecting to server
+2026-10-15 19:23:30,267 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:can: Timeout connecting to server
+2026-10-15 19:23:30,314 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:suction: Timeout connecting to server
+2026-10-15 19:23:30,329 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:foldab: Timeout connecting to server
+2026-10-15 19:23:31,665 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:usa: Timeout connecting to server
+2026-10-15 19:23:32,510 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:foldable des: Timeout connecting to server
+2026-10-15 19:23:32,654 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:foldable d: Timeout connecting to server
+2026-10-15 19:23:34,901 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:canned: Timeout connecting to server
+2026-10-15 19:23:35,513 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:math manipulativ: Timeout connecting to server

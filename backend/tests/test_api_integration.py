@@ -1,6 +1,6 @@
 """End-to-end API behaviour with REAL PostgreSQL + REAL Redis (opt-in, see conftest.py).
 
-Each test documents a defect that was reproduced on the pre-audit code (finding ids in comments)."""
+Each test documents a defect that was reproduced on the original code (finding ids refer to docs/postmortems.md)."""
 import secrets
 
 import pytest
@@ -187,7 +187,7 @@ def test_oversized_request_body_is_rejected_before_being_buffered(client):
 
 
 def test_searches_make_a_query_trend_end_to_end(client):
-    """F-10: recent activity must influence what /suggest returns (it did not before the audit)."""
+    """F-10: recent activity must influence what /suggest returns (it did not in the original code)."""
     assert q(client, "iphone")[0] == "iphone 15 pro case"
     for _ in range(120):
         assert client.post("/search", json={"query": "iphone 12 case"}).status_code == 200

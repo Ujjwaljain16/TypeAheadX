@@ -1,0 +1,15 @@
+2026-10-16 03:28:03,628 [INFO] app.main: Initializing Cache...
+2026-10-16 03:28:04,107 [INFO] app.cache.factory: CacheFactory: Using Distributed Redis cache
+2026-10-16 03:28:04,140 [INFO] app.cache.redis_node: Connected to Redis node localhost:47379 at localhost:47379
+2026-10-16 03:28:04,149 [INFO] app.cache.redis_node: Connected to Redis node localhost:47380 at localhost:47380
+2026-10-16 03:28:04,159 [INFO] app.cache.redis_node: Connected to Redis node localhost:47381 at localhost:47381
+2026-10-16 03:28:04,159 [INFO] app.main: Starting Batch Worker...
+2026-10-16 03:28:04,159 [INFO] app.write_buffer.batch_worker: Batch worker started.
+2026-10-16 03:28:04,159 [INFO] app.main: Warming up cache for A-Z prefixes...
+2026-10-16 03:28:04,607 [INFO] app.main: Cache warmup complete.
+2026-10-16 03:29:34,462 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:headp: Timeout connecting to server
+2026-10-16 03:29:46,401 [INFO] app.cache.redis_node: Redis node localhost:47380 recovered
+2026-10-16 03:30:28,654 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:headp: Timeout connecting to server
+2026-10-16 03:30:40,494 [INFO] app.cache.redis_node: Redis node localhost:47380 recovered
+2026-10-16 03:31:45,387 [ERROR] app.cache.distributed_cache: Redis get error on localhost:47380 for suggestion:headp: Timeout connecting to server
+2026-10-16 03:31:57,319 [INFO] app.cache.redis_node: Redis node localhost:47380 recovered

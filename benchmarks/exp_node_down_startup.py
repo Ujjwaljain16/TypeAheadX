@@ -25,19 +25,19 @@ def main():
     ap.add_argument("--code", required=True)
     ap.add_argument("--label", default="")
     a = ap.parse_args()
-    subprocess.run(["docker", "stop", "-t", "1", "taxaudit-redis-b"], capture_output=True)
+    subprocess.run(["docker", "stop", "-t", "1", "taxbench-redis-b"], capture_output=True)
     C.flush_redis()
-    srv = C.Server(Path(a.code), log_path=C.REPO / "audit" / "results" / "experiments" / f"server_nodedown_{a.label}.log")
-    (C.REPO / "audit" / "results" / "experiments").mkdir(parents=True, exist_ok=True)
+    srv = C.Server(Path(a.code), log_path=C.REPO / "benchmarks" / "results" / "experiments" / f"server_nodedown_{a.label}.log")
+    (C.REPO / "benchmarks" / "results" / "experiments").mkdir(parents=True, exist_ok=True)
     try:
         srv.start()
-        subprocess.run(["docker", "start", "taxaudit-redis-b"], capture_output=True)
+        subprocess.run(["docker", "start", "taxbench-redis-b"], capture_output=True)
         time.sleep(12)                       # > breaker window (5 s * 1.2), so a recovering design has had time
         C.flush_redis()
         # find prefixes owned by redis-b (port 47380 => name "localhost:47380") using the app's own routing
         sys.path.insert(0, str(Path(a.code) / "backend"))
         import os
-        os.environ.update(C.audit_env())
+        os.environ.update(C.bench_env())
         from app.cache.consistent_hash_ring import ConsistentHashRing
         ring = ConsistentHashRing(500)
         for p in C.REDIS_PORTS:
@@ -54,11 +54,11 @@ def main():
                "redis_b_keyspace_hits_delta": after - before, "redis_b_dbsize_after": keys_on_b,
                "recovered_and_used": keys_on_b > 0}
         print(json.dumps(res))
-        with open(C.REPO / "audit" / "results" / "experiments" / "node_down_startup.jsonl", "a") as fh:
+        with open(C.REPO / "benchmarks" / "results" / "experiments" / "node_down_startup.jsonl", "a") as fh:
             fh.write(json.dumps(res) + "\n")
     finally:
         srv.stop()
-        subprocess.run(["docker", "start", "taxaudit-redis-b"], capture_output=True)
+        subprocess.run(["docker", "start", "taxbench-redis-b"], capture_output=True)
 
 
 if __name__ == "__main__":

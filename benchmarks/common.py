@@ -19,13 +19,13 @@ import requests
 REPO = Path(__file__).resolve().parent.parent
 PY = sys.executable
 PG_DSN = os.environ.get("PG_DSN", "postgresql://postgres:postgres@localhost:47433/typeaheadx")
-REDIS_PORTS = [47379, 47380, 47381]
-CONTAINERS = {"pg": "taxaudit-postgres", "redis-a": "taxaudit-redis-a",
-              "redis-b": "taxaudit-redis-b", "redis-c": "taxaudit-redis-c"}
+REDIS_PORTS = [int(x) for x in os.environ.get("TAXB_REDIS_PORTS", "47379,47380,47381").split(",")]
+CONTAINERS = {"pg": "taxbench-postgres", "redis-a": "taxbench-redis-a",
+              "redis-b": "taxbench-redis-b", "redis-c": "taxbench-redis-c"}
 BASE_URL = "http://127.0.0.1:8000"
 
 
-def audit_env(extra: dict | None = None) -> dict:
+def bench_env(extra: dict | None = None) -> dict:
     env = os.environ.copy()
     env.update({
         "DATABASE_URL": PG_DSN.replace("postgresql://", "postgresql+psycopg://"),
@@ -45,7 +45,7 @@ class Server:
         self.code_dir = Path(code_dir)
         self.workers = workers
         self.extra_env = extra_env or {}
-        self.log_path = log_path or (Path(os.environ.get("TEMP", ".")) / "taxaudit_server.log")
+        self.log_path = log_path or (Path(os.environ.get("TEMP", ".")) / "taxbench_server.log")
         self.extra_args = extra_args or []
         self.proc: subprocess.Popen | None = None
 
@@ -55,7 +55,7 @@ class Server:
         cmd = [PY, "-m", "uvicorn", "app.main:app", "--port", "8000", "--host", "127.0.0.1",
                "--log-level", "warning", "--workers", str(self.workers), *self.extra_args]
         self.proc = subprocess.Popen(cmd, cwd=str(self.code_dir / "backend"),
-                                     env=audit_env(self.extra_env), stdout=log, stderr=subprocess.STDOUT)
+                                     env=bench_env(self.extra_env), stdout=log, stderr=subprocess.STDOUT)
         t0 = time.time()
         while time.time() - t0 < timeout:
             try:
@@ -141,7 +141,7 @@ def docker_stats() -> dict:
     res = {}
     for line in out.splitlines():
         n, c, m = line.split("|")
-        if n.startswith("taxaudit-"):
+        if n.startswith("taxbench-"):
             res[n] = {"cpu": c, "mem": m}
     return res
 
@@ -257,7 +257,7 @@ def environment_metadata(code_dir: Path) -> dict:
         "node": sh(["node", "--version"]), "docker": sh(["docker", "--version"]),
         "packages": {n: pkgver(n) for n in ["fastapi", "uvicorn", "starlette", "sqlalchemy", "psycopg", "redis",
                                               "pydantic", "pydantic-settings", "aiohttp", "numpy"]},
-        "images": sh(["docker", "ps", "--filter", "name=taxaudit", "--format", "{{.Names}}={{.Image}}"]).replace("\n", ", "),
+        "images": sh(["docker", "ps", "--filter", "name=taxbench", "--format", "{{.Names}}={{.Image}}"]).replace("\n", ", "),
         "pg_version": _pg_scalar("SELECT version()"),
         "pg_settings": {k: _pg_scalar(f"SHOW {k}") for k in
                         ["shared_buffers", "work_mem", "max_connections", "effective_cache_size", "synchronous_commit"]},

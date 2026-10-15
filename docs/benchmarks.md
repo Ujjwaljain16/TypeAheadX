@@ -1,6 +1,6 @@
 # Benchmarks
 
-What was measured, how, and what the results do and do not support. Raw data and full tables: [`audit/BENCHMARK_RESULTS.md`](../audit/BENCHMARK_RESULTS.md); tooling: [`benchmarks/`](../benchmarks/README.md).
+What was measured, how, and what the results do and do not support. Raw data and full tables: [`docs/benchmark-details.md`](./benchmark-details.md); tooling: [`benchmarks/`](../benchmarks/README.md).
 
 ## Method (why the numbers can be trusted — and where they can't)
 * **Open-loop load.** Requests are scheduled at a fixed arrival rate and latency is measured from the *intended* send time. A closed loop ("send, wait, send") slows itself down when the server is slow and hides queueing (coordinated omission); the project's original benchmark was closed-loop in chunks of 100 and its "100 000 concurrent requests" never exceeded 100 in flight.
@@ -29,7 +29,7 @@ What was measured, how, and what the results do and do not support. Raw data and
 | Sustained 120 rps × 120 s | p50 3.6 ms, flat | p50 2.3 ms, flat; RSS 93 MB, no leak |
 
 ## Where the improvement came from (isolated A/B, 3 interleaved reps each)
-Settings object cached per process (−27 % CPU, p50 −22 %), cached JSON document served without re-validation (−12…16 % CPU), plain-ASGI timing middleware (−7…15 % CPU, no latency change), single-flight for concurrent misses, one-statement upsert and batched `DEL`s for the write path. The correctness and reliability fixes alone changed nothing on the hot path. Details: [`audit/OPTIMIZATIONS.md`](../audit/OPTIMIZATIONS.md).
+Settings object cached per process (−27 % CPU, p50 −22 %), cached JSON document served without re-validation (−12…16 % CPU), plain-ASGI timing middleware (−7…15 % CPU, no latency change), single-flight for concurrent misses, one-statement upsert and batched `DEL`s for the write path. The correctness and reliability fixes alone changed nothing on the hot path. Details: [`docs/optimizations.md`](./optimizations.md).
 
 ## Things that surprised me
 * The database path is nearly as fast as the cache at this scale (≈ 4–6 ms vs 1–2 ms end-to-end): the cache's value here is **CPU relief and load shedding**, not raw latency. This is dataset-size dependent and is stated as such.
@@ -37,13 +37,13 @@ Settings object cached per process (−27 % CPU, p50 −22 %), cached JSON docum
 * A single 500-key `DEL` stalled ≈ 95 ms through Docker Desktop's port proxy while 100-key commands take ≈ 2 ms per 600 keys — platform-specific, found by measurement, handled with a chunk size.
 
 ## Limits of the evidence
-Single machine, single worker, synthetic typing behaviour, loopback networking. Not measured: multi-worker scaling, Linux, million-row corpora, Redis eviction behaviour, soak > 2 minutes, slow-but-alive dependencies. See [`audit/CAPACITY_AND_LIMITS.md`](../audit/CAPACITY_AND_LIMITS.md).
+Single machine, single worker, synthetic typing behaviour, loopback networking. Not measured: multi-worker scaling, Linux, million-row corpora, Redis eviction behaviour, soak > 2 minutes, slow-but-alive dependencies. See [`docs/capacity-and-limits.md`](./capacity-and-limits.md).
 
 ## Reproducing
 ```bash
-docker compose -p taxaudit -f benchmarks/docker-compose.bench.yml up -d      # disposable stack on ports 47xxx
+docker compose -p taxbench -f benchmarks/docker-compose.bench.yml up -d      # disposable stack on ports 47xxx
 source benchmarks/env.sh
 python backend/ingest.py --dsn "$PG_DSN"
-bash benchmarks/run_matrix_ab.sh <baseline-checkout> .                        # ≈ 3 h; see audit/REPRODUCING.md
+bash benchmarks/run_matrix_ab.sh <baseline-checkout> .                        # ≈ 3 h; see benchmarks/REPRODUCING.md
 ```
-The pre-audit code is commit `a45f129` (`git archive a45f129 | tar -x -C /tmp/baseline`).
+The original code is commit `a45f129` (`git archive a45f129 | tar -x -C /tmp/baseline`).

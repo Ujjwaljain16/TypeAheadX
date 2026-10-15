@@ -47,7 +47,7 @@ def main():
     ap.add_argument("--rounds", type=int, default=30)
     a = ap.parse_args()
     C.flush_redis()
-    p = subprocess.run([sys.executable, "-c", CHILD, a.code, str(a.rounds)], env=C.audit_env(), capture_output=True, text=True,
+    p = subprocess.run([sys.executable, "-c", CHILD, a.code, str(a.rounds)], env=C.bench_env(), capture_output=True, text=True,
                        cwd=str(Path(a.code) / "backend"))
     last = [l for l in p.stdout.splitlines() if l.startswith("{")]
     if not last:
@@ -55,7 +55,7 @@ def main():
         raise SystemExit(1)
     res = {"label": a.label, "code": a.code, **json.loads(last[-1])}
     print(json.dumps(res))
-    out = C.REPO / "audit" / "results" / "experiments"
+    out = C.REPO / "benchmarks" / "results" / "experiments"
     out.mkdir(parents=True, exist_ok=True)
     with open(out / "flush_duration.jsonl", "a") as fh:
         fh.write(json.dumps(res) + "\n")
