@@ -150,4 +150,8 @@ data/            the 150 000-row corpus and how it was derived
 4. Idempotency keys so writes can carry a deadline safely; tear down hung connections.
 5. If counter durability ever matters: a local journal / Redis stream *before* the in-memory buffer.
 
+## 10. License
+
+[MIT](./LICENSE). The query corpus in `data/` is derived from the public AmazonQAC dataset (see [`data/README.md`](./data/README.md)) and keeps its own terms.
+
 <sub>`docs/archive/Project_Report.md` is the original project report, kept for history; some of its figures are superseded by the measurements above.</sub>
