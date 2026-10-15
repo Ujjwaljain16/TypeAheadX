@@ -10,10 +10,21 @@ from ..services.normalization import escape_like
 # Prefix match is expressed as LIKE <escaped-prefix>% ESCAPE '\' so that '%', '_' and '\'
 # typed by a user are matched literally. The pattern is a bind parameter; with the
 # text_pattern_ops index PostgreSQL derives the range  query >= p AND query < p'  from it.
+#
+# Ranking (docs/ARCHITECTURE.md section 4):  score = historical_count + beta * recent_count * exp(-lambda * hours)
+# where `hours` is the time since recent_count was last updated. The decay is evaluated at READ time:
+# recent_count is only rewritten when a query is searched, so a stored value for a query nobody searches any
+# more would otherwise never fade. The expression is computed only for rows matching the prefix (the
+# prefix index narrows them first), so it is not indexable and does not need to be. Rows with
+# recent_count = 0 (everything in the loaded dataset until searched) sort exactly as before:
+# historical_count DESC, query ASC.
 _FETCH_SQL = text(
     "SELECT query, historical_count FROM queries "
     "WHERE query LIKE :pattern ESCAPE '\\' "
-    "ORDER BY historical_count DESC, query ASC LIMIT :limit"
+    "ORDER BY (historical_count + CAST(:beta AS double precision) * recent_count "
+    "         * exp(-CAST(:lam AS double precision) "
+    "               * GREATEST(EXTRACT(EPOCH FROM (NOW() - last_decay_at)), 0) / 3600.0)) DESC, "
+    "         historical_count DESC, query ASC LIMIT :limit"
 )
 
 # Atomic merge of a batch of buffered search counts.
@@ -42,12 +53,17 @@ _UPSERT_SQL = text(
 
 
 class QueryRepository:
-    def __init__(self, session_factory):
-        """session_factory should be a context manager that yields a SQLAlchemy Session."""
+    def __init__(self, session_factory, trending_beta: float = 0.0, decay_lambda: float = 0.5):
+        """session_factory should be a context manager that yields a SQLAlchemy Session.
+
+        ``trending_beta`` weights the (read-time decayed) recent count in the ranking score; 0 means
+        "historical popularity only". ``decay_lambda`` is per hour and must match the write path."""
         self._session_factory = session_factory
+        self._beta = float(trending_beta)
+        self._lambda = float(decay_lambda)
 
     def fetch_suggestions(self, prefix: str, limit: int) -> Sequence[QuerySuggestion]:
-        params = {"pattern": escape_like(prefix) + "%", "limit": limit}
+        params = {"pattern": escape_like(prefix) + "%", "limit": limit, "beta": self._beta, "lam": self._lambda}
         with self._session_factory() as session:  # type: Session
             rows = session.execute(_FETCH_SQL, params).fetchall()
         return [QuerySuggestion(query=row[0], historical_count=int(row[1])) for row in rows]

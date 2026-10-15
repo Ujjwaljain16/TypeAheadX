@@ -184,3 +184,15 @@ def test_oversized_request_body_is_rejected_before_being_buffered(client):
     assert r.status_code == 413
     assert write_buffer.get_size() == 0
     assert client.post("/search", json={"query": "small body is fine"}).status_code == 200
+
+
+def test_searches_make_a_query_trend_end_to_end(client):
+    """F-10: recent activity must influence what /suggest returns (it did not before the audit)."""
+    assert q(client, "iphone")[0] == "iphone 15 pro case"
+    for _ in range(120):
+        assert client.post("/search", json={"query": "iphone 12 case"}).status_code == 200
+    batch_worker.flush()
+    # 227 + 120 historical, plus 10 * 120 recent  >>  987
+    assert q(client, "iphone")[0] == "iphone 12 case"
+    r = client.get("/suggest", params={"q": "iphone"}).json()
+    assert r["suggestions"][0]["historical_count"] == 347      # the displayed count stays the historical count

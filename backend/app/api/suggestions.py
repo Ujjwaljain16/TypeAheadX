@@ -14,7 +14,8 @@ router = APIRouter()
 
 
 def get_repository() -> QueryRepository:
-    return QueryRepository(get_session)
+    settings = get_settings()
+    return QueryRepository(get_session, trending_beta=settings.trending_beta, decay_lambda=settings.trending_lambda)
 
 
 from ..cache.factory import CacheFactory

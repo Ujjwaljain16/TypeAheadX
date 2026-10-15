@@ -72,7 +72,7 @@ def test_prefix_query_uses_the_text_pattern_ops_index(pg_dsn):
                   "SELECT md5(g::text) || ' ' || g, g % 1000 FROM generate_series(1, 60000) g")
         c.execute("ANALYZE queries")
     with get_session() as s:
-        plan = "\n".join(r[0] for r in s.execute(text("EXPLAIN " + _FETCH_SQL.text), {"pattern": "abc%", "limit": 10}))
+        plan = "\n".join(r[0] for r in s.execute(text("EXPLAIN " + _FETCH_SQL.text), {"pattern": "abc%", "limit": 10, "beta": 10.0, "lam": 0.5}))
     assert "idx_query_prefix" in plan, plan
     assert "Seq Scan" not in plan, plan
 
@@ -174,3 +174,63 @@ def test_batches_are_sent_in_sorted_order_so_concurrent_flushers_lock_rows_consi
     assert seen["params"]["queries"] == ["apple", "mango", "zebra"]
     assert seen["params"]["deltas"] == [2, 3, 1]
     assert "ORDER BY t.q" in seen["sql"]
+
+
+# ---- trending ranking (read-time decayed recent_count) -----------------------------------------
+def _set_recent(query, recent, hours_ago):
+    with get_session() as s:
+        s.execute(text("UPDATE queries SET recent_count = :r, last_decay_at = NOW() - (:h * interval '1 hour') WHERE query = :q"),
+                  {"r": recent, "h": hours_ago, "q": query})
+        s.commit()
+
+
+def test_recent_activity_lifts_a_query_above_more_popular_ones(seeded):
+    repo = QueryRepository(get_session, trending_beta=10.0, decay_lambda=0.5)
+    assert names(repo.fetch_suggestions("iphone", 3)) == ["iphone 15 pro case", "iphone 14 pro max case", "iphone"]
+    _set_recent("iphone 12 case", 40.0, 0)           # 227 + 10*40 = 627 > 520 (iphone) but < 908
+    assert names(repo.fetch_suggestions("iphone", 4)) == [
+        "iphone 15 pro case", "iphone 14 pro max case", "iphone 12 case", "iphone"]
+
+
+def test_trend_fades_at_read_time_without_any_new_write(seeded):
+    repo = QueryRepository(get_session, trending_beta=10.0, decay_lambda=0.5)
+    order = lambda: names(repo.fetch_suggestions("iphone", 5))  # noqa: E731
+    base = ["iphone 15 pro case", "iphone 14 pro max case", "iphone", "iphone 13 case", "iphone 12 case"]
+    assert order() == base
+    _set_recent("iphone 12 case", 40.0, 0)           # 227 + 10*40 = 627 -> third (above 520)
+    assert order() == ["iphone 15 pro case", "iphone 14 pro max case", "iphone 12 case", "iphone", "iphone 13 case"]
+    _set_recent("iphone 12 case", 40.0, 2)           # 227 + 400*e^-1 = 374 -> below 381 but above nothing else: fifth
+    assert order() == base
+    _set_recent("iphone 12 case", 40.0, 0.5)         # 227 + 400*e^-0.25 = 538 -> above 520: third again
+    assert order()[2] == "iphone 12 case"
+    _set_recent("iphone 12 case", 40.0, 24)          # ~227.002: faded away with no write
+    assert order() == base
+
+
+def test_beta_zero_and_untouched_rows_rank_by_history_only(seeded):
+    _set_recent("ipad", 1000.0, 0)
+    assert names(QueryRepository(get_session, trending_beta=0.0).fetch_suggestions("i", 3))[:2] == ["iphone 15 pro case", "iphone 14 pro max case"]
+    # with the default dataset state (recent_count = 0 everywhere) ordering equals the original query
+    _set_recent("ipad", 0.0, 0)
+    assert names(QueryRepository(get_session, trending_beta=10.0).fetch_suggestions("i", 3))[:2] == ["iphone 15 pro case", "iphone 14 pro max case"]
+
+
+def test_ranking_parameters_are_passed_to_the_database():
+    seen = {}
+
+    class S:
+        def execute(self, sql, params):
+            seen.update(params)
+            class R:
+                def fetchall(self_inner):
+                    return []
+            return R()
+
+    from contextlib import contextmanager
+
+    @contextmanager
+    def f():
+        yield S()
+
+    QueryRepository(f, trending_beta=7.5, decay_lambda=0.25).fetch_suggestions("a", 5)
+    assert (seen["beta"], seen["lam"], seen["limit"], seen["pattern"]) == (7.5, 0.25, 5, "a%")
