@@ -1,66 +1,52 @@
-# TypeAheadX Backend
+# TypeAheadX backend
 
-This is the core engine of TypeAheadX. It is a high-performance Python application built with **FastAPI**, designed to handle massive read concurrency while absorbing viral write spikes safely.
+FastAPI service: prefix suggestions from a consistent-hash Redis cache in front of PostgreSQL, popularity updates through a bounded write buffer, trending ranking with read-time decay. Design: [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md).
 
----
+## Layout
+```
+app/
+  main.py                 app + lifespan (warm-up, final flush), middleware (timing, body limit, CORS), /health /ready /metrics
+  api/                    suggestions.py (GET /suggest) · search.py (POST /search, /write/metrics) · cache.py (/cache/debug, /cache/metrics)
+  services/               suggestion_service.py (cache-aside + single-flight) · normalization.py (the one normaliser) · trending_calculator.py (reference decay formula, used by tests)
+  cache/                  distributed_cache.py · redis_node.py (client + breaker) · consistent_hash_ring.py · redis_cache.py (1-node ring) · memory_cache.py · metrics.py
+  database/               config.py (settings) · session.py (engine, timeouts) · guard.py (deadline/bulkhead/breaker for reads)
+  repositories/           query_repository.py (prefix+ranking query, atomic upsert)
+  write_buffer/           buffer.py · batch_worker.py · metrics.py
+  utils/                  breaker.py (shared circuit breaker)
+schema.sql · ingest.py · migrate.py · requirements*.txt (lock file pinned and audited)
+tests/                    unit + integration (real PostgreSQL/Redis, opt-in) + property-based
+```
 
-## 1. Architecture Overview
-
-The backend is built around a CQRS (Command Query Responsibility Segregation) philosophy, strictly separating the Read and Write paths:
-
-- **The Read Path** is completely shielded by a custom **Distributed Caching Engine** implementing a 128-bit MD5 Consistent Hash Ring across multiple Redis nodes.
-- **The Write Path** is decoupled from the API via an **Asynchronous Write Buffer** that aggregates Zipfian traffic in-memory and flushes to PostgreSQL in the background.
-
----
-
-## 2. Codebase Structure
-
-The backend is organized by domain responsibilities:
-
-### `/app`
-- `/api`: FastAPI routers (`/suggest`, `/search`, `/metrics`, `/cache/debug`).
-- `/cache`: The core distributed cache logic. Contains the `CacheInterface`, `ConsistentHashRing`, `RedisNode` connections, and `CacheMetrics` singleton.
-- `/write_buffer`: The asynchronous daemon thread that utilizes a "Lock and Swap" in-memory dictionary to protect PostgreSQL from connection exhaustion.
-- `/services`: Contains `trending_calculator.py`, which executes the inline exponential decay mathematics for calculating query popularity.
-- `/repositories`: Data access layer for executing optimized PostgreSQL B-Tree queries and bulk `UPSERT` statements.
-
-### `Root Level`
-- `schema.sql`: Defines the `queries` table, the `text_pattern_ops` B-Tree prefix index, and the composite trending index.
-- `migrate.py`: Simple migration script to add columns and indexes.
-- `ingest.py`: High-performance bulk ingestion script that safely loads 150,000 queries from `data/processed/queries.csv`.
-
----
-
-## 3. Storage Foundation
-
-The source of truth is PostgreSQL. While Tries are the textbook data structure for autocomplete, they lack durable persistence and clustering. By leveraging PostgreSQL's B-Tree index with `text_pattern_ops`, we achieved exceptional performance for prefix matching (`LIKE 'prefix%'`). 
-
-Because our caching hit rate averages **97%+**, PostgreSQL's primary job is acting as a highly durable cold-storage engine and asynchronous trending aggregator, not a real-time read replica.
-
----
-
-## 4. Development Setup
-
-**1. Environment Variables:**
+## Run
 ```bash
+docker compose up -d                                  # from the repo root
+python -m venv .venv && .venv/Scripts/pip install -r requirements.txt     # .venv/bin/pip on Linux/macOS
 cp .env.example .env
+python ingest.py                                      # creates the schema, loads data/processed/queries.csv (150 000 rows)
+uvicorn app.main:app --port 8000
 ```
+`python migrate.py` upgrades an older database (adds columns, drops the unused `idx_trending_score`).
 
-**2. Virtual Environment:**
-```bash
-python -m venv .venv
-# Activate: .venv\Scripts\activate (Windows) or source .venv/bin/activate (Mac/Linux)
-pip install -r requirements.txt
-```
+## Configuration (environment / `.env`)
+| Variable | Default | Meaning |
+|---|---|---|
+| `DATABASE_URL` | `postgresql+psycopg://postgres:postgres@localhost:5433/typeaheadx` | |
+| `CACHE_PROVIDER` | `memory` (`.env.example`: `distributed`) | `distributed` (ring), `redis` (one node), `memory` (per process — **no** size bound) |
+| `REDIS_NODES`, `VIRTUAL_NODES` | `localhost:6379,6380,6381`, `500` | must be identical on every instance |
+| `CACHE_TTL_SECONDS` | 300 | |
+| `REDIS_TIMEOUT_SECONDS`, `REDIS_BREAKER_SECONDS` | 0.25, 5 | per-node timeout / breaker window |
+| `DB_QUERY_TIMEOUT_SECONDS`, `DB_MAX_CONCURRENCY`, `DB_BREAKER_SECONDS` | 2, 15, 5 | read-path database deadline / bulkhead / breaker |
+| `DB_POOL_TIMEOUT_SECONDS`, `DB_CONNECT_TIMEOUT_SECONDS` | 5, 5 | |
+| `MAX_PREFIX_LENGTH`, `MAX_QUERY_LENGTH`, `MAX_REQUEST_BYTES` | 64, 200, 16384 | input limits |
+| `WRITE_BUFFER_SIZE`, `WRITE_BUFFER_FLUSH_INTERVAL`, `WRITE_BUFFER_MAX_UNIQUE` | 100, 10, 50000 | flush policy (distinct queries / seconds) and buffer cap |
+| `TRENDING_BETA`, `TRENDING_LAMBDA` | 10, 0.5 | ranking weight and decay per hour |
+| `CORS_ORIGINS`, `ENABLE_DEBUG_ENDPOINTS` | `*`, `true` | set debug endpoints to `false` outside development |
 
-**3. Initialize Database:**
-Assuming your PostgreSQL instance is running on port 5432 (via `docker-compose up -d` at the project root):
+## Tests
 ```bash
-python migrate.py
-python ingest.py
+pip install -r requirements-dev.txt
+pytest                                  # 71 tests need no services; 65 integration tests are skipped with a reason
+source ../benchmarks/env.sh && docker compose -p taxaudit -f ../benchmarks/docker-compose.bench.yml up -d
+pytest --cov=app                        # all 136 against real PostgreSQL + Redis (database typeaheadx_test, Redis is FLUSHED)
 ```
-
-**4. Start API:**
-```bash
-uvicorn app.main:app --reload --port 8000
-```
+The integration tests refuse to run unless `TAX_TEST_PG_DSN` points to a local database whose name ends in `_test`.

@@ -16,7 +16,7 @@ repository's own documentation does not match the implementation.
 | Write path | `write_buffer/{buffer,batch_worker,metrics}.py` | in-process dict + daemon thread |
 | Frontend | `frontend/src/**` | Next.js 16 preview, React 19, no tests |
 | Data / ops | `backend/ingest.py`, `migrate.py`, `data/processed/queries.csv` (150 000 rows), `docker-compose.yml` | no app Dockerfile, no CI |
-| Experiments (pre-audit) | `scripts/*.py` | simulations + a closed-loop benchmark; see `FINAL_REPORT.md` §Claims |
+| Experiments (pre-audit) | `scripts/*.py` (removed; valid simulations moved to `benchmarks/simulations/`) | simulations + a closed-loop benchmark; see `FINAL_REPORT.md` §6 |
 | Tests (pre-audit) | `backend/tests/test_suggest_api.py` (5 tests) | needs live DB+Redis; see §7 |
 
 ## 2. Component diagram

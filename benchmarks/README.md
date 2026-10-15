@@ -38,7 +38,9 @@ no scenario touches any database or Redis other than the ports listed in `env.sh
 | `report.py` | tables (median, min–max, bootstrap CI) + CSV |
 | `profile_summary.py` | aggregate a `py-spy record --gil -f raw` file |
 | `exp_*.py` | fault/consistency experiments: lost updates, node down at start-up, write path during a DB freeze, flush duration |
-| `mutation_smoke.py` | re-introduces the audited defects and checks the test-suite fails |
+| `mutation_smoke.py` | re-introduces the audited defects (17 mutants) and checks the test-suite fails |
+| `compare.py` | compact before/after table from two result labels |
+| `simulations/` | pure-computation studies (ring ownership, key movement on topology change, write-buffer sizing) — no services needed |
 
 ## Scenarios
 

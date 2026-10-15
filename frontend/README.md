@@ -1,30 +1,20 @@
-# TypeAheadX Frontend
+# TypeAheadX frontend
 
-This is the Next.js frontend for **TypeAheadX**, designed to provide a highly responsive, Google-like autocomplete search experience while remaining robust against race conditions and network spam.
+Next.js 16 (App Router) · React 19 · Tailwind 4 · TypeScript. A single-page autocomplete box built to behave well with chaotic input and a slow or failing backend.
 
-## Tech Stack
-- **Framework**: Next.js 15 (App Router)
-- **Library**: React 19
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
+## Behaviour
+1. **Debounce (250 ms)** — one request per pause in typing, not one per keystroke (`hooks/useDebounce.ts`).
+2. **Cancellation** — a shared `AbortController` aborts the previous in-flight request when a new one starts; an `isMounted` guard in the effect cleanup ensures a late response can never overwrite a newer one (`lib/api.ts`, `hooks/useSuggestions.ts`). Verified by code inspection only — there are no automated frontend tests yet.
+3. **Selection feedback** — clicking a suggestion or pressing Enter posts the query to `POST /search` (the write buffer); the text just selected is not re-fetched.
+4. **Keyboard & a11y** — `role="combobox"` / `listbox` / `option`, `aria-activedescendant`, `aria-autocomplete="list"`, Up/Down/Enter/Escape. Not done: a live region announcing loading/error states.
+5. Input is limited to 64 characters (the backend rejects longer prefixes with 400).
 
-## Engineering Highlights
-
-While the backend handles the heavy lifting of consistent hashing and distributed caching, the frontend is engineered to handle chaotic user input efficiently:
-
-1. **Debouncing (250ms)**: User keystrokes are debounced to ensure we don't spam the API with 6 requests for a 6-letter word. It waits until the user pauses typing before fetching.
-2. **Request Cancellation (`AbortController`)**: If a user types "iphone", deletes it, and types "samsung" rapidly, the network might return "iphone" results *after* "samsung" results. We use `AbortController` to cancel in-flight requests, guaranteeing the UI never displays stale data from a race condition.
-3. **Trending Feedback Loop**: Clicking a suggestion (or hitting Enter) fires a `POST` request to the backend, feeding the async write-buffer and dynamically updating the global popularity rankings.
-
-## Getting Started
-
-First, ensure the FastAPI backend is running on `http://localhost:8000`.
-
-Then, install dependencies and start the development server:
-
+## Run
 ```bash
-npm install
-npm run dev
+npm ci
+NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev      # default API URL is http://localhost:8000
+npm run lint && npx tsc --noEmit && npm run build
 ```
+CI runs install, type-check and build on Linux. `npm run lint` currently reports two pre-existing `react-hooks/set-state-in-effect` errors (non-gating in CI; the effects reset UI state when the query becomes empty).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to interact with the search engine.
+`next` is pinned to a published release (16.2.7); the original pin to a preview build had no SWC binaries and forced a Windows-only dependency that broke `npm ci` everywhere else.

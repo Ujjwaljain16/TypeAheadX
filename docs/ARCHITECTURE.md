@@ -1,194 +1,121 @@
-# TypeAheadX Architecture Reference
+# TypeAheadX — Architecture
 
-This document serves as the definitive technical reference for the TypeAheadX architecture. While the `README.md` documents the engineering journey, this file details the final system design, request lifecycles, and core algorithms.
+The definitive technical reference. It describes what the code **does** (verified by tests and benchmarks — see
+[`audit/`](../audit/FINAL_REPORT.md)); design rationale lives in [`adrs/`](./adrs), measured behaviour in
+[`benchmarks.md`](./benchmarks.md).
 
----
+## 1. Components
 
-## 1. System Overview
-
-At a high level, TypeAheadX separates its read path and write path to optimize for conflicting requirements:
-- **Reads** must be served in `< 50ms` to keep up with human typing speeds.
-- **Writes** (user selections) happen in bursts and must not impact the read latency or overwhelm the database.
-
-```text
-                            +--------------------------+
-                            |     Next.js Frontend     |
-                            +-----------+--------------+
-                                        |
-                                        v
-                            +--------------------------+
-                            |        FastAPI           |
-                            +-----------+--------------+
-                                        |
-                   +--------------------+--------------------+
-                   |                                         |
-            READ PATH                                  WRITE PATH
-                   |                                         |
-          +--------v---------+                      +--------v---------+
-          | Distributed Cache|                      |   Write Buffer   |
-          | (Consistent Hash)|                      | (In-Memory Map)  |
-          +--------+---------+                      +--------+---------+
-                   |                                         |
-        +----------+----------+               [Flush @ 10s or 100 items]
-        |          |          |                              |
- +------v---+ +----v-----+ +--v-------+              +-------v--------+
- | Redis A  | | Redis B  | | Redis C  |              | Async Aggregator|
- +------+---+ +----+-----+ +--+-------+              +-------+--------+
-        |          |          |                              |
-        |    [Cache Miss]     |                      [PostgreSQL UPSERT]
-        +----------+----------+                              |
-                   |                               [Invalidate Prefixes]
-                   |                                         |
-                   +--------------------+--------------------+
-                                        |
-                            +-----------v--------------+
-                            |       PostgreSQL         |
-                            +--------------------------+
+```mermaid
+flowchart TB
+  subgraph Client
+    UI[SearchInput] --> DB[useDebounce 250 ms] --> HK[useSuggestions] --> AC[ApiClient<br/>AbortController]
+  end
+  AC -->|GET /suggest| MW
+  UI -->|POST /search| MW
+  subgraph API["FastAPI process"]
+    MW[Timing + body-limit + CORS middleware] --> R1["/suggest (sync → thread pool)"]
+    MW --> R2["/search (async)"]
+    R1 --> SVC[SuggestionService]
+    SVC --> SF[single-flight table]
+    SVC --> RC[DistributedCache]
+    SF --> GRD[DatabaseGuard<br/>deadline · bulkhead · breaker]
+    GRD --> REPO[QueryRepository]
+    R2 --> WB[WriteBuffer<br/>bounded dict]
+    BW[BatchWorker thread] --> WB
+    BW --> REPO
+    BW -->|delete_many| RC
+    RC --> RING[ConsistentHashRing]
+  end
+  RING --> N1[(Redis A)] & N2[(Redis B)] & N3[(Redis C)]
+  REPO --> PG[(PostgreSQL)]
 ```
 
----
+| Layer | Module | Responsibility |
+|---|---|---|
+| API | `api/suggestions.py`, `api/search.py`, `api/cache.py`, `main.py` | validation, HTTP mapping (400 / 413 / 503), `/ready`, `/metrics`, lifespan (start-up warm-up, final flush on shutdown) |
+| Service | `services/suggestion_service.py`, `services/normalization.py` | one normaliser for reads, writes, cache keys and invalidation; cache-aside; single-flight |
+| Cache | `cache/distributed_cache.py`, `redis_node.py`, `consistent_hash_ring.py` | routing, per-node breaker, short timeouts, no client retries, batched deletes |
+| Persistence | `repositories/query_repository.py`, `database/{session,guard,config}.py` | prefix query + ranking SQL, atomic upsert, deadline/bulkhead/breaker on reads |
+| Write path | `write_buffer/{buffer,batch_worker,metrics}.py` | aggregation, flush policy, failure handling, invalidation |
 
-## 2. Read Path Lifecycle
+## 2. Data model
 
-The Read Path is optimized entirely for speed, utilizing a cache-aside pattern shielded by consistent hashing.
+```sql
+queries(id BIGSERIAL PK, query TEXT UNIQUE NOT NULL, historical_count BIGINT, recent_count DOUBLE PRECISION,
+        last_decay_at TIMESTAMPTZ, last_searched_at TIMESTAMPTZ, created_at TIMESTAMPTZ)
+INDEX idx_query_prefix ON queries (query text_pattern_ops)     -- LIKE 'prefix%' becomes a range scan
+```
+`text_pattern_ops` is required because the database collation (`en_US.utf8`) is not byte-ordered, so the default btree
+cannot serve `LIKE`. The unique constraint carries its own btree (used by `ON CONFLICT`). Only these three indexes
+exist; the earlier expression index on the trending score had zero scans and cannot serve a read-time-decayed score
+([ADR-005](./adrs/005-read-time-trending-ranking.md)).
 
-**Scenario**: User types `"iph"`
+## 3. Read path (`GET /suggest?q=`)
 
-```text
-User types "iph"
-       ↓
-[Frontend]
-Debounce (250ms) and request cancellation using AbortController
-to prevent stale responses from racing with newer user input
-       ↓
-GET /suggest?q=iph
-       ↓
-[FastAPI]
-       ↓
-[Distributed Cache]
-Compute MD5 Hash of "iph"
-       ↓
-[Hash Ring]
-Bisect 500 Virtual Nodes to find physical owner
-       ↓
-[Redis Node] (e.g., redis-b)
+1. **Validate/normalise** (`normalization.validate_text`): NFC → lower-case → trim/collapse whitespace; empty → 400; > 64 chars → 400; control characters or lone surrogates → 400.
+2. **Cache lookup:** key `suggestion:<normalised prefix>` → ring → owning Redis node → value is the *complete JSON response*; a hit is returned as-is (no re-validation).
+3. **Miss:** `_single_flight` — the first request for a key becomes the *leader*; concurrent identical requests wait (≤ 5 s) for its result. The leader calls PostgreSQL through the guard, stores the document (`SET … EX 300`) and wakes the followers.
+4. **Query:** `WHERE query LIKE :escaped_prefix% ESCAPE '\' ORDER BY score DESC, historical_count DESC, query ASC LIMIT 10` where `score = historical_count + β·recent_count·e^(−λ·Δt)`. `%`, `_`, `\` typed by users are escaped, so they match literally.
+5. **Failure mapping:** database timeout / saturation / open breaker → `503 + Retry-After: 2`; other database errors → `503 + Retry-After: 1`; a Redis problem is *never* an error — it is a miss.
+
+`total_results` is the number of returned rows (≤ 10), not the number of matches.
+
+## 4. Write path (`POST /search`)
+
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant A as /search
+  participant B as WriteBuffer
+  participant W as BatchWorker
+  participant P as PostgreSQL
+  participant R as Redis ring
+  C->>A: {"query": "..."}
+  A->>A: validate (≤ 200 chars, no control chars), body ≤ 16 KiB
+  A->>B: increment (503 + Retry-After when 50 000 distinct are buffered)
+  A-->>C: 200 immediately
+  loop every 1 s
+    W->>B: ≥ 100 distinct queries or 10 s elapsed?
+  end
+  W->>B: swap out snapshot
+  W->>P: ONE statement: INSERT … SELECT FROM unnest(…) ORDER BY q ON CONFLICT DO UPDATE
+  W->>R: DEL suggestion:<every prefix of every flushed query> (≤ 100 keys per command, per node)
 ```
 
-**Outcome 1: Cache Hit**
-- Redis returns the Top 10 JSON array.
-- FastAPI returns response to user.
+* **Atomicity & concurrency:** the merge happens in SQL under row locks (`historical_count = queries.historical_count + EXCLUDED…`, decay computed on the database clock), rows ordered consistently → concurrent flushers (several workers/instances) neither lose updates nor deadlock.
+* **Failure handling:** database reachable but the batch fails → bisect to isolate the unpersistable row, drop only it (`events_dropped`). Database unreachable → the uncommitted remainder is re-queued (bounded). A successful commit is never followed by a re-queue (no double counting). Graceful shutdown flushes once more.
+* **Durability:** the buffer is process memory. `kill -9` loses ≤ one flush window (~10 s). The flush path is intentionally **not** deadline-guarded: a timed-out write may still execute later, so retrying it would double count ([ADR-006](./adrs/006-write-path-durability-and-db-deadlines.md)).
 
-**Outcome 2: Cache Miss**
-```text
-[PostgreSQL]
-Query B-Tree Index: 
-SELECT query FROM queries 
-WHERE query LIKE 'iph%' 
-ORDER BY historical_count + 10.0 * recent_count * exp(-λ·hours_since_last_update) DESC 
-LIMIT 10
-       ↓
-[FastAPI]
-       ↓
-Populate Cache (Redis SET)
-       ↓
-Return Response
-```
+## 5. Ranking
 
----
+`score = historical_count + β·recent_count·e^(−λ·hours)` (β = 10, λ = 0.5 per hour by default). `recent_count` is rewritten only when a query is flushed (decayed to that moment, plus the new searches); the *read* applies the remaining decay. Queries never searched through `/search` have `recent_count = 0` and rank exactly by `historical_count`. Cached results keep their order for ≤ 300 s.
 
-## 3. Write Path Lifecycle
+## 6. Cache and consistency
 
-The Write Path is optimized for aggregation. Directly writing every user selection to the database would cause connection pool exhaustion during viral traffic events. 
+* **Routing:** MD5 of the key on a ring with 500 virtual nodes per physical node; deterministic across processes (does not use Python's randomised `hash()`); adding a node moves ≈ 26 % of keys. There is **no** automatic ring membership change: a failed node is *skipped* by its breaker, not removed from the ring.
+* **Per-node breaker:** opens for 5 s (+0–20 % jitter) after a failure; a single probe tests recovery; timeouts 250 ms; redis-py's default 3× retry is disabled (it turned a 250 ms timeout into 5–8 s).
+* **Consistency model:** eventual. After a flush, affected prefixes are deleted, so the next read recomputes. A reader that fetched from PostgreSQL *before* the commit can re-populate a key after the delete; that entry lives ≤ TTL (300 s). Accepted and bounded.
+* **Negative caching:** empty results are cached (same TTL).
+* **Memory:** ≈ 540–700 bytes per cached prefix; Redis runs with `noeviction` in the compose file — set `maxmemory` + `allkeys-lru` in production.
 
-**Scenario**: User clicks the suggestion `"iphone 15"`
+## 7. Failure modes (measured)
 
-```text
-POST /search {"query": "iphone 15"}
-       ↓
-[FastAPI]
-Return 200 OK immediately
-       ↓
-[Write Buffer]
-In-memory aggregation (dict increment)
-`buffer["iphone 15"] += 1`
-       ↓
-[Size/Time Trigger]
-If buffer size >= 100 OR 10 seconds elapsed since last flush
-       ↓
-[Batch Worker]
-Lock buffer, swap with empty dict, and process asynchronously
-       ↓
-[Trending Decay]
-Calculate exponential decay for existing records
-       ↓
-[PostgreSQL UPSERT]
-Single batch transaction: 
-INSERT INTO queries ... ON CONFLICT DO UPDATE ...
-       ↓
-[Prefix Invalidation]
-Identify all prefixes (e.g., "i", "ip", "iph", ...)
-Delete them from the Distributed Cache
-```
+| Failure | Behaviour | Mechanism |
+|---|---|---|
+| 1 of 3 Redis nodes stopped/frozen | 0 errors, p99 ≈ 9 ms at 100 rps | breaker + 250 ms timeout + no retries |
+| Redis unreachable at start | lazily retried | lazy client + breaker |
+| PostgreSQL frozen | misses → 503 in ≤ 2 s; hits unaffected; recovery within the breaker window | `DatabaseGuard` |
+| PostgreSQL down / connection refused | misses → 503, breaker avoids hammering connects (5 s connect timeout) | guard + pool/connect timeouts |
+| Flush fails | no event lost (re-queued) or one row dropped (isolated) | `BatchWorker._write` |
+| Unique-query flood on `/search` | bounded memory, 503 backpressure | buffer cap |
+| Process crash | ≤ ~10 s of increments lost | design trade-off |
 
-*Note: By invalidating prefixes on write, the next read path naturally rebuilds the cache with the freshest trends.*
+## 8. Scaling notes (reasoned, **not** measured)
 
----
+* `--workers N` / multiple pods: ranking writes stay correct (atomic SQL); the write buffer, single-flight table, metrics and breakers are **per process**, so coalescing is ≤ N queries per key and `/metrics` shows one worker.
+* Adding Redis nodes: ≈ 26 % of keys move (cold misses, no failure); a hot prefix still lives on one node — a local LRU or key replication would be the next step, but no measurement shows it is needed.
+* A bigger corpus: the cost driver is the top-N sort over all matches of a short prefix (3.6 ms at 6 177 matches). Options: precomputed top-K per short prefix, or a trie/search engine ([ADR-001](./adrs/001-storage-engine.md) records why they were not chosen).
 
-## 4. Ranking Algorithm
-
-TypeAheadX ranks queries using a composite score that balances all-time popularity against recent, viral trends.
-
-**Core Formula:**
-```math
-final_score = historical_count + β × recent_count × e^(−λ · hours_since_recent_count_was_updated)
-```
-
-**Variables Explained:**
-- `historical_count`: The absolute number of times the query has been searched historically.
-- `recent_count`: A dedicated counter for recent traffic bursts.
-- `β` (Beta Weight): A configurable multiplier (`10.0`) that amplifies the impact of recent searches.
-
-**Exponential Decay:**
-To ensure trends fade out when they are no longer relevant, we apply exponential decay to the `recent_count` during the batch flush process.
-```python
-hours_elapsed = (now - last_decay_at).total_seconds() / 3600
-new_recent_count = old_recent_count * math.exp(-lambda * hours_elapsed) + new_searches
-```
-The same decay is applied again **at read time** (the factor `e^(−λ·Δt)` in the score), because `recent_count` is only rewritten when a query is searched — without it, the stored value of a query nobody searches any more would never fade. The score is computed only for rows matching the prefix, so no index on it is needed (the former `idx_trending_score` was removed). This guarantees that viral events spike the ranking quickly but decay organically over time without requiring heavy offline CRON jobs. Queries that were never searched through `/search` have `recent_count = 0` and rank exactly by `historical_count`.
-
----
-
-## 5. Cache Architecture
-
-The caching layer is highly engineered to distribute traffic safely and efficiently.
-
-- **Redis Nodes**: 3 independent Redis instances acting as key-value stores.
-- **Consistent Hashing**: Instead of naive modulo hashing (`hash % N`), which invalidates ~75% of the cache when adding or removing a node, we map keys onto a 128-bit MD5 Hash Ring.
-- **Virtual Nodes**: To prevent uneven traffic distribution, each physical Redis node is assigned **500 virtual nodes** scattered across the ring.
-  - *Why 500?* Sensitivity studies proved that 150 virtual nodes yielded an unacceptable 10% ownership skew. 500 virtual nodes reduced the variance to `< 2%` with practically zero memory footprint.
-- **Failure Behavior**: If a Redis node dies, its virtual nodes are removed from the ring. The `bisect` algorithm seamlessly routes traffic to the next closest healthy nodes.
-
----
-
-## 6. Failure Modes
-
-A production engineer must understand how the system breaks. Here is the known failure matrix:
-
-| Failure Mode | Current Behavior | Production Solution |
-| :--- | :--- | :--- |
-| **Redis node dies** | **DB fallback**. The Hash Ring reroutes to healthy nodes, causing cache misses and spiking DB reads. | **Replication**. Use Redis Sentinel/Cluster with automatic failover to replica nodes. |
-| **Cache stampede** | **DB overload**. 10,000 concurrent misses for the same key will query PostgreSQL 10,000 times. | **Singleflight**. Implement a locking mechanism (e.g., Go's `singleflight`) so only 1 request hits the DB. |
-| **API crash** | **Lose buffer**. Any data sitting in the in-memory Write Buffer is lost on restart. | **Kafka**. Write events to a durable distributed log (Kafka) before aggregating. |
-| **Hot key** | **Hot shard**. A viral prefix (e.g., "i") overloads a single physical Redis node regardless of hashing. | **Replication / Local Cache**. Replicate extremely hot keys across multiple shards or introduce an in-process LRU cache (L1). |
-
----
-
-## 7. Known Production Limitations
-
-| Limitation | Why it exists | Production solution |
-| :--- | :--- | :--- |
-| **Buffer data loss** | In-memory buffer is volatile | **Kafka durable log**. Write events to Kafka before aggregating. |
-| **Hot key overload** | Consistent hashing balances keys, not traffic | **Hot key replication**. Replicate the hottest keys to all nodes dynamically. |
-| **Cache stampede** | Concurrent misses hit DB | **Singleflight locking**. Implement in-memory request coalescing. |
-| **Single region deployment** | No geographic redundancy | **Multi-region Redis/Postgres**. Use Global Datastore and read replicas. |
-| **Manual cache topology** | Static Redis nodes configured via `.env` | **Service discovery**. Use Consul or etcd to map cluster membership dynamically. |
+## 9. Non-goals
+Fuzzy/typo-tolerant matching, personalisation, multi-language ranking, authentication, multi-region replication.
