@@ -9,6 +9,8 @@ Status values: **Fixed+verified** (regression test fails on old behaviour and pa
 Regression-test column refers to files under `backend/tests/`. The mutation check
 (`benchmarks/mutation_smoke.py`) re-introduces 12 of these defects into a copy of the code; all 12 are caught.
 
+> **Status note:** F-10 (trending ranking) and F-27 (frozen database, reads) were fixed in follow-up commits after the main audit commit — their sections describe the baseline evidence and the fix. Everything else is as of the main commit. Current design: [`../docs/`](../docs/ARCHITECTURE.md).
+
 ## Summary table
 
 | ID | Sev | Title | Evidence | Status |
@@ -52,7 +54,7 @@ Regression-test column refers to files under `backend/tests/`. The mutation chec
   `ModuleNotFoundError: No module named 'redis'` (`cache/redis_cache.py:4` imports it unconditionally from
   `cache/factory.py`). `requirements.txt` also lacks `httpx` (needed by `TestClient`); `requirements-lock.txt`
   is UTF-16 encoded, omits `redis`, and pins `starlette 1.2.1`, `anyio 4.13.0`, `urllib3 2.7.0`, `pydantic-settings 2.14.1`,
-  `pytest 8.4.2` with 12 known advisories (see F-28). `scripts/*.py` additionally need `aiohttp`, `numpy` (listed nowhere).
+  `pytest 8.4.2` with 12 known advisories (see F-28). `scripts/*.py` (removed in the cleanup) additionally needed `aiohttp`, `numpy` (listed nowhere).
 * **Impact.** Nobody can start the service from the documented instructions; builds are not reproducible.
 * **Fix.** `redis` added; `requirements-dev.txt` (pytest, pytest-cov, hypothesis, httpx); `benchmarks/requirements.txt`;
   lock regenerated from a clean environment (ASCII, 40 lines).

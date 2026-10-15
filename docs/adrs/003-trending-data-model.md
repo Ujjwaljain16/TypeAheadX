@@ -1,5 +1,7 @@
 # ADR-003: Trending Data Model
 
+> **Update (2026-10-16):** the data model below is unchanged, but the ranking it enables was not wired up and the stored `recent_count` only decays when written. See [ADR-005](./005-read-time-trending-ranking.md).
+
 **Date:** 2026-06-10
 **Status:** Accepted
 
