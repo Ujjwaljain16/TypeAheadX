@@ -1,6 +1,6 @@
 """Checks several quantitative claims made in README.md / docs/*.md against the actual code.
 
-Pure computation (no services). Prints JSON; also appended to audit/results/experiments/claims.json.
+Pure computation (no services). Prints JSON; also appended to benchmarks/results/experiments/claims.json.
   python benchmarks/exp_claims.py
 """
 from __future__ import annotations
@@ -79,6 +79,6 @@ res["final_benchmark_concurrency"] = ("requests are sent in chunks of 100 with a
                                       "excludes queueing that open-loop arrivals would incur")
 
 print(json.dumps(res, indent=2))
-out = REPO / "audit" / "results" / "experiments"
+out = REPO / "benchmarks" / "results" / "experiments"
 out.mkdir(parents=True, exist_ok=True)
 (out / "claims.json").write_text(json.dumps(res, indent=2), encoding="utf-8")

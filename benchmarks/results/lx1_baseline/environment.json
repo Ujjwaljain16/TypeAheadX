@@ -1,0 +1,40 @@
+{
+  "timestamp_utc": "2026-10-15T22:43:31Z",
+  "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "cpu_logical": 4,
+  "cpu_physical": 2,
+  "ram_gb": 15.6,
+  "python": "3.11.17",
+  "node": "v22.23.3",
+  "docker": "Docker version 28.0.4, build b8034c0",
+  "packages": {
+    "fastapi": "0.143.2",
+    "uvicorn": "0.54.0",
+    "starlette": "1.8.0",
+    "sqlalchemy": "2.1.4",
+    "psycopg": "3.3.6",
+    "redis": "8.1.0",
+    "pydantic": "2.14.1",
+    "pydantic-settings": "2.16.0",
+    "aiohttp": "3.14.5",
+    "numpy": "2.4.6"
+  },
+  "images": "",
+  "pg_version": "PostgreSQL 15.19 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+  "pg_settings": {
+    "shared_buffers": "128MB",
+    "work_mem": "4MB",
+    "max_connections": "100",
+    "effective_cache_size": "4GB",
+    "synchronous_commit": "on"
+  },
+  "container_limits": "postgres: 2 CPU / 2g; each redis: 1 CPU / 512m (benchmarks/docker-compose.bench.yml)",
+  "git_commit_repo": "3acb5a76f03ad3cd3e102b8adb05812ff8a62f1d",
+  "git_dirty_files_in_repo": [
+    "?? benchmarks/results/lx1_baseline/",
+    "?? benchmarks/results/lx1_final/"
+  ],
+  "code_under_test": "/home/runner/work/_temp/baseline",
+  "network": "loopback (127.0.0.1) via Docker Desktop port-forwarding on Windows; load generator, API server, and containers share ONE physical machine"
+}

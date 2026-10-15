@@ -5,7 +5,7 @@ set -u
 CODE="$1"; LABEL="$2"; MODE="${3:-full}"
 cd "$(dirname "$0")/.."
 source benchmarks/env.sh
-PY=./.venv/Scripts/python
+PY="${PY:-./.venv/Scripts/python}"
 RB="$PY benchmarks/run_bench.py --code $CODE --label $LABEL"
 REPS=3; [ "$MODE" = "quick" ] && REPS=1
 $RB --scenario warm      --rates 50,100,150,200,250,300 --reps $REPS --duration 20 --warmup 5

@@ -1,6 +1,6 @@
 # Lessons learned
 
-Each lesson is something the original design got wrong or assumed, how it was found, and the general principle. Evidence: [`audit/FINDINGS.md`](../audit/FINDINGS.md).
+Each lesson is something the original design got wrong or assumed, how it was found, and the general principle. Evidence: [`docs/postmortems.md`](./postmortems.md).
 
 1. **A feature isn't done until you've broken it.** Active cache invalidation, node-failure tolerance, horizontally safe writes and trending ranking all *looked* implemented and had been described as working. Invalidation deleted `suggest:<p>` while reads used `suggestion:<p>` (never matched); a dead cache node caused a total outage; concurrent flushers lost 67–70 % of updates; the ranking ignored the trending score. Each was exposed only by an experiment that provoked it (write → flush → read; kill a node; run N flushers; query the ordering). → *Test the failure, not the happy path; derive keys from one function.*
 

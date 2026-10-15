@@ -53,7 +53,7 @@ def main():
     ap.add_argument("--concurrency", type=int, default=100)
     ap.add_argument("--drain-timeout", type=float, default=900)
     a = ap.parse_args()
-    out_dir = C.REPO / "audit" / "results" / "experiments"
+    out_dir = C.REPO / "benchmarks" / "results" / "experiments"
     out_dir.mkdir(parents=True, exist_ok=True)
     with C.pg_conn() as c:
         c.execute("DELETE FROM queries WHERE query LIKE %s", (PFX + "%",))
@@ -66,7 +66,7 @@ def main():
         real = [c for c in srv.tree() if c.pid != srv.proc.pid] or [psutil.Process(srv.proc.pid)]   # skip the venv launcher stub
         proc = real[0]
         rss0 = proc.memory_info().rss
-        subprocess.run(["docker", "pause", "taxaudit-postgres"], capture_output=True)
+        subprocess.run(["docker", "pause", "taxbench-postgres"], capture_output=True)
         t0 = time.time()
         ok, bad = asyncio.run(flood(a.events, a.concurrency))
         res.update(accepted_200=ok, rejected_or_failed=bad, flood_seconds=round(time.time() - t0, 1))
@@ -75,7 +75,7 @@ def main():
         wm = requests.get(C.BASE_URL + "/write/metrics", timeout=5).json()
         res.update(rss_before_mb=round(rss0 / 2**20, 1), rss_during_freeze_mb=round(rss_peak / 2**20, 1),
                    buffer_unique_during_freeze=wm["buffer_current_size"], metrics_during_freeze=wm)
-        subprocess.run(["docker", "unpause", "taxaudit-postgres"], capture_output=True)
+        subprocess.run(["docker", "unpause", "taxbench-postgres"], capture_output=True)
         t1 = time.time()
         # Drain = persisted-event count stops changing AND the buffer is empty. (Buffer size alone is NOT enough: the
         # worker swaps the buffer out before the slow write, so size 0 can mean "write still in flight".)
@@ -97,7 +97,7 @@ def main():
         res.update(persisted_rows=persisted[0], persisted_events=int(persisted[1]),
                    accepted_but_not_persisted=ok - int(persisted[1]), final_metrics=requests.get(C.BASE_URL + "/write/metrics", timeout=5).json())
     finally:
-        subprocess.run(["docker", "unpause", "taxaudit-postgres"], capture_output=True)
+        subprocess.run(["docker", "unpause", "taxbench-postgres"], capture_output=True)
         srv.stop()
         with C.pg_conn() as c:
             c.execute("DELETE FROM queries WHERE query LIKE %s", (PFX + "%",))

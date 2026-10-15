@@ -14,7 +14,7 @@ source benchmarks/env.sh
 for ((r=0; r<REPS; r++)); do
   for v in "${VARS[@]}"; do
     name="${v%%=*}"; dir="${v#*=}"
-    ./.venv/Scripts/python benchmarks/run_bench.py --code "$dir" --label "${PFX}_${name}" --scenario "$SCEN" \
+    "${PY:-./.venv/Scripts/python}" benchmarks/run_bench.py --code "$dir" --label "${PFX}_${name}" --scenario "$SCEN" \
       --rates "$RATES" --reps 1 --rep-offset $r --duration "$DUR" --warmup "$WARM" "${EXTRA[@]}"
   done
 done

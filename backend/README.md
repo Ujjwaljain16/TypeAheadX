@@ -13,7 +13,7 @@ app/
   repositories/           query_repository.py (prefix+ranking query, atomic upsert)
   write_buffer/           buffer.py · batch_worker.py · metrics.py
   utils/                  breaker.py (shared circuit breaker)
-schema.sql · ingest.py · migrate.py · requirements*.txt (lock file pinned and audited)
+schema.sql · ingest.py · migrate.py · requirements*.txt (lock file pinned and vulnerability-checked)
 tests/                    unit + integration (real PostgreSQL/Redis, opt-in) + property-based
 ```
 
@@ -46,7 +46,7 @@ uvicorn app.main:app --port 8000
 ```bash
 pip install -r requirements-dev.txt
 pytest                                  # 71 tests need no services; 65 integration tests are skipped with a reason
-source ../benchmarks/env.sh && docker compose -p taxaudit -f ../benchmarks/docker-compose.bench.yml up -d
+source ../benchmarks/env.sh && docker compose -p taxbench -f ../benchmarks/docker-compose.bench.yml up -d
 pytest --cov=app                        # all 136 against real PostgreSQL + Redis (database typeaheadx_test, Redis is FLUSHED)
 ```
 The integration tests refuse to run unless `TAX_TEST_PG_DSN` points to a local database whose name ends in `_test`.

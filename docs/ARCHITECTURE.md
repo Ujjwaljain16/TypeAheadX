@@ -1,7 +1,7 @@
 # TypeAheadX — Architecture
 
 The definitive technical reference. It describes what the code **does** (verified by tests and benchmarks — see
-[`audit/`](../audit/FINAL_REPORT.md)); design rationale lives in [`adrs/`](./adrs), measured behaviour in
+[`postmortems.md`](./postmortems.md)); design rationale lives in [`adrs/`](./adrs), measured behaviour in
 [`benchmarks.md`](./benchmarks.md).
 
 ## 1. Components

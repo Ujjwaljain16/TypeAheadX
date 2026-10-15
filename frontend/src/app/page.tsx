@@ -10,7 +10,7 @@ export default function Home() {
           </span>
         </h1>
         <p className="text-lg text-slate-500 mb-12 text-center max-w-xl">
-          Lightning-fast prefix suggestions powered by PostgreSQL. Type below to see real-time historical search patterns.
+          Prefix suggestions served from a consistent-hash Redis cache in front of PostgreSQL. Type below — popular and trending queries rise to the top.
         </p>
 
         <SearchInput />
@@ -18,7 +18,7 @@ export default function Home() {
       </div>
       
       <div className="fixed bottom-8 text-sm text-slate-400 font-medium tracking-wide">
-        PHASE 2 • USER SEARCH EXPERIENCE
+        SYSTEM DESIGN DEMO • REDIS RING · POSTGRESQL · WRITE BUFFER
       </div>
     </main>
   );

@@ -70,4 +70,4 @@ if __name__ == "__main__":
     run_ring_analysis(150)
     run_ring_analysis(500)
     run_ring_analysis(1000)
-    print("\n✅ Ring Audit Complete.")
+    print("\n✅ Ring analysis complete.")

@@ -1,0 +1,9 @@
+2026-10-16 02:13:51,974 [INFO] app.main: Initializing Cache...
+2026-10-16 02:13:52,068 [INFO] app.cache.factory: CacheFactory: Using Distributed Redis cache
+2026-10-16 02:13:52,068 [WARNING] app.cache.distributed_cache: REDIS_NODES is empty. DistributedCache will operate with 0 nodes.
+2026-10-16 02:13:52,068 [INFO] app.main: Starting Batch Worker...
+2026-10-16 02:13:52,068 [INFO] app.write_buffer.batch_worker: Batch worker started.
+2026-10-16 02:13:52,070 [INFO] app.main: Warming up cache for A-Z prefixes...
+2026-10-16 02:13:52,260 [INFO] app.main: Cache warmup complete.
+2026-10-16 02:14:01,694 [INFO] app.database.guard: database recovered; circuit closed
+2026-10-16 02:14:17,487 [INFO] app.database.guard: database recovered; circuit closed
