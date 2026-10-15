@@ -1,0 +1,2 @@
+{"label": "baseline", "code": "C:/Users/ujjwa/AppData/Local/Temp/claude/D--Projects-Hack-TypeAheadX/8fbbf636-268a-44f4-a0a2-f9b767befe07/scratchpad/baseline", "keys_probed": 50, "requests": 150, "redis_b_keyspace_hits_delta": 0, "redis_b_dbsize_after": 0, "recovered_and_used": false}
+{"label": "audited", "code": ".", "keys_probed": 50, "requests": 150, "redis_b_keyspace_hits_delta": 100, "redis_b_dbsize_after": 50, "recovered_and_used": true}

@@ -1,8 +1,6 @@
-import os
 import logging
 from .base import CacheInterface
 from .memory_cache import InMemoryCache
-from .redis_cache import RedisCache
 
 logger = logging.getLogger(__name__)
 

@@ -1,0 +1,5 @@
+-r ../backend/requirements.txt
+aiohttp>=3.9
+numpy>=1.26
+psutil>=5.9
+requests>=2.31

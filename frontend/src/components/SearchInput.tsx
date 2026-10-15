@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSuggestions } from "@/hooks/useSuggestions";
+import { ApiClient, MAX_QUERY_LENGTH } from "@/lib/api";
 import { SuggestionDropdown } from "./SuggestionDropdown";
 
 export function SearchInput() {
@@ -15,7 +16,8 @@ export function SearchInput() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const debouncedQuery = useDebounce(query, 250);
-  const { suggestions, isLoading, error } = useSuggestions(debouncedQuery);
+  // No suggestion fetch for text that was just selected (submittedQuery is cleared again on the next keystroke).
+  const { suggestions, isLoading, error } = useSuggestions(debouncedQuery, submittedQuery);
 
   // Reset selected index when suggestions change
   useEffect(() => {
@@ -65,18 +67,8 @@ export function SearchInput() {
     setSelectedIndex(-1);
     setSubmittedQuery(selectedQuery);
 
-    try {
-      // Fire and forget search submission
-      await fetch("http://localhost:8000/search", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query: selectedQuery }),
-      });
-    } catch (err) {
-      console.error("Failed to submit search:", err);
-    }
+    // Fire and forget search submission
+    await ApiClient.recordSearch(selectedQuery);
   };
 
   const showDropdown = isFocused && query.length > 0;
@@ -102,7 +94,9 @@ export function SearchInput() {
             type="text"
             role="combobox"
             aria-expanded={showDropdown}
+            aria-autocomplete="list"
             aria-controls="search-suggestions"
+            maxLength={MAX_QUERY_LENGTH}
             aria-activedescendant={selectedIndex >= 0 ? `suggestion-${selectedIndex}` : undefined}
             value={query}
             onChange={(e) => {

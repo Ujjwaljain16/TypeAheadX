@@ -21,7 +21,7 @@ class ConsistentHashRing:
         MD5 hashing provides deterministic, uniform distribution across 128 bits.
         Converted to integer for fast ring traversal via bisect.
         """
-        return int(hashlib.md5(key.encode()).hexdigest(), 16)
+        return int(hashlib.md5(key.encode(), usedforsecurity=False).hexdigest(), 16)
 
     def add_node(self, physical_node: str):
         if physical_node in self.nodes:
@@ -48,16 +48,7 @@ class ConsistentHashRing:
             return
             
         self.nodes.remove(physical_node)
-        for i in range(self.virtual_nodes):
-            virtual_node = f"{physical_node}_replica_{i}"
-            h = self._hash(virtual_node)
-            
-            # Since we handle collisions by h+=1, we might need to search
-            # But practically we can just rebuild or use a proper lookup
-            # Let's iterate linearly over positions to remove matches if needed
-            # For simplicity, we can do a dict comprehension to rebuild
-            pass
-            
+
         # Rebuild is safer to handle collision offsets
         self.ring = []
         self.positions = {}

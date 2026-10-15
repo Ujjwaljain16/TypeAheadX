@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from functools import lru_cache
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
 from ..database.config import Settings, get_settings
+from ..database.guard import DatabaseGuard
 from ..database.session import get_session
 from ..repositories.query_repository import QueryRepository
 from ..schemas.response import SuggestionResponse
@@ -11,13 +14,22 @@ from ..services.suggestion_service import SuggestionService
 router = APIRouter()
 
 
+@lru_cache(maxsize=1)
+def get_guard() -> DatabaseGuard:
+    settings = get_settings()
+    return DatabaseGuard(max_concurrency=settings.db_max_concurrency, timeout_s=settings.db_query_timeout_seconds,
+                         breaker_seconds=settings.db_breaker_seconds)
+
+
 def get_repository() -> QueryRepository:
-    return QueryRepository(get_session)
+    settings = get_settings()
+    return QueryRepository(get_session, trending_beta=settings.trending_beta, decay_lambda=settings.trending_lambda,
+                           guard=get_guard())
 
 
 from ..cache.factory import CacheFactory
 
-def get_service(settings: Settings = Depends(get_settings)) -> SuggestionService:
+def build_service(settings: Settings) -> SuggestionService:
     return SuggestionService(
         get_repository(),
         cache=CacheFactory.get_cache(),
@@ -27,13 +39,25 @@ def get_service(settings: Settings = Depends(get_settings)) -> SuggestionService
     )
 
 
-@router.get("/suggest", response_model=SuggestionResponse)
+@lru_cache(maxsize=1)
+def _shared_service() -> SuggestionService:
+    # one instance for the process: the single-flight table must be shared between requests
+    return build_service(get_settings())
+
+
+def get_service() -> SuggestionService:
+    return _shared_service()
+
+
+@router.get("/suggest", response_model=SuggestionResponse, response_class=Response)
 def suggest(
     q: str = Query(..., description="Prefix to search for"),
     service: SuggestionService = Depends(get_service),
-) -> SuggestionResponse:
+) -> Response:
     try:
         normalized = service.validate_and_normalize(q)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-    return service.suggest(normalized)
+    # The service returns the already-serialised JSON body; returning a Response skips FastAPI's
+    # second validation + serialisation pass (the schema is still advertised through response_model).
+    return Response(content=service.suggest_json(normalized), media_type="application/json")

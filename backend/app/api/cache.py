@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 from typing import Optional, Dict
-import os
+
+from fastapi import HTTPException
 
 from ..cache.factory import CacheFactory
 from ..cache.metrics import CacheMetrics
 from ..database.config import get_settings
+from ..services.normalization import normalize_text, suggestion_cache_key
 
 router = APIRouter(prefix="/cache", tags=["cache"])
 
@@ -26,14 +28,18 @@ class CacheMetricsResponse(BaseModel):
     sets: int
     deletes: int
     errors: int
+    breaker_skips: int = 0
     hit_rate: float
     node_hits: Dict[str, int] = {}
 
 @router.get("/debug", response_model=CacheDebugResponse)
 def cache_debug(prefix: str = Query(..., description="Prefix to check in cache")):
+    settings = get_settings()
+    if not settings.enable_debug_endpoints:
+        raise HTTPException(status_code=404, detail="Not Found")
     cache = CacheFactory.get_cache()
-    key = f"suggestion:{prefix}"
-    provider = get_settings().cache_provider
+    key = suggestion_cache_key(normalize_text(prefix))
+    provider = settings.cache_provider
     
     # If using distributed cache, we have rich debug info
     if hasattr(cache, "get_debug_info"):
@@ -62,6 +68,8 @@ def cache_debug(prefix: str = Query(..., description="Prefix to check in cache")
 
 @router.get("/metrics", response_model=CacheMetricsResponse)
 def cache_metrics():
+    if not get_settings().enable_debug_endpoints:
+        raise HTTPException(status_code=404, detail="Not Found")
     metrics = CacheMetrics.get_metrics()
     provider = get_settings().cache_provider
     

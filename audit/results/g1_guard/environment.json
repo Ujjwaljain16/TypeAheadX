@@ -1,0 +1,53 @@
+{
+  "timestamp_utc": "2026-10-15T20:09:55Z",
+  "os": "Windows-10-10.0.26200-SP0",
+  "machine": "AMD64",
+  "cpu_logical": 16,
+  "cpu_physical": 10,
+  "ram_gb": 15.7,
+  "python": "3.11.9",
+  "node": "v22.19.0",
+  "docker": "Docker version 29.0.1, build eedd969",
+  "packages": {
+    "fastapi": "0.136.3",
+    "uvicorn": "0.49.0",
+    "starlette": "1.2.1",
+    "sqlalchemy": "2.0.50",
+    "psycopg": "3.3.4",
+    "redis": "8.0.0",
+    "pydantic": "2.13.4",
+    "pydantic-settings": "2.14.1",
+    "aiohttp": "3.14.1",
+    "numpy": "2.4.6"
+  },
+  "images": "taxaudit-redis-c=redis:7-alpine, taxaudit-postgres=postgres:15-alpine, taxaudit-redis-b=redis:7-alpine, taxaudit-redis-a=redis:7-alpine",
+  "pg_version": "PostgreSQL 15.19 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+  "pg_settings": {
+    "shared_buffers": "128MB",
+    "work_mem": "4MB",
+    "max_connections": "100",
+    "effective_cache_size": "4GB",
+    "synchronous_commit": "on"
+  },
+  "container_limits": "postgres: 2 CPU / 2g; each redis: 1 CPU / 512m (benchmarks/docker-compose.bench.yml)",
+  "git_commit_repo": "e76975127aaec147d548e8a9a9fc6c7b1cc27cc1",
+  "git_dirty_files_in_repo": [
+    "M audit/results/experiments/mutation_smoke.json",
+    " M backend/app/api/suggestions.py",
+    " M backend/app/cache/redis_node.py",
+    " M backend/app/database/config.py",
+    " M backend/app/main.py",
+    " M backend/app/repositories/query_repository.py",
+    " M backend/tests/conftest.py",
+    " M backend/tests/test_api_integration.py",
+    " M benchmarks/mutation_smoke.py",
+    "?? audit/results/g1_baseline/",
+    "?? audit/results/g1_final3/",
+    "?? audit/results/g1_guard/",
+    "?? backend/app/database/guard.py",
+    "?? backend/app/utils/breaker.py",
+    "?? backend/tests/test_database_guard.py"
+  ],
+  "code_under_test": "C:\\Users\\ujjwa\\AppData\\Local\\Temp\\claude\\D--Projects-Hack-TypeAheadX\\8fbbf636-268a-44f4-a0a2-f9b767befe07\\scratchpad\\variants\\v_guard",
+  "network": "loopback (127.0.0.1) via Docker Desktop port-forwarding on Windows; load generator, API server, and containers share ONE physical machine"
+}

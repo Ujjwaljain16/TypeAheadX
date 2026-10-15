@@ -11,6 +11,6 @@ CREATE TABLE IF NOT EXISTS queries (
 CREATE INDEX IF NOT EXISTS idx_query_prefix
     ON queries (query text_pattern_ops);
 
-CREATE INDEX IF NOT EXISTS idx_trending_score ON queries (
-    (historical_count + 10.0 * recent_count) DESC
-);
+-- NOTE: the former idx_trending_score expression index was removed: the ranking decays recent_count at read
+-- time, which an index cannot express, and the index had zero scans while costing a write per upsert.
+-- Existing databases: DROP INDEX IF EXISTS idx_trending_score;  (migrate.py does this)

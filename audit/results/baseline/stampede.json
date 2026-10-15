@@ -1,0 +1,47 @@
+[
+  {
+    "scenario": "stampede",
+    "rep": 0,
+    "workers": 1,
+    "keys": 20,
+    "concurrent_per_key": 200,
+    "total_requests": 4000,
+    "ok": 4000,
+    "db_xacts_during_burst": 125,
+    "ideal_db_queries_single_flight": 20,
+    "db_queries_per_key": 6.2,
+    "p50_ms": 634.6,
+    "p99_ms": 831.7,
+    "max_ms": 890.1
+  },
+  {
+    "scenario": "stampede",
+    "rep": 1,
+    "workers": 1,
+    "keys": 20,
+    "concurrent_per_key": 200,
+    "total_requests": 4000,
+    "ok": 4000,
+    "db_xacts_during_burst": 108,
+    "ideal_db_queries_single_flight": 20,
+    "db_queries_per_key": 5.4,
+    "p50_ms": 653.0,
+    "p99_ms": 802.8,
+    "max_ms": 845.7
+  },
+  {
+    "scenario": "stampede",
+    "rep": 2,
+    "workers": 1,
+    "keys": 20,
+    "concurrent_per_key": 200,
+    "total_requests": 4000,
+    "ok": 4000,
+    "db_xacts_during_burst": 117,
+    "ideal_db_queries_single_flight": 20,
+    "db_queries_per_key": 5.8,
+    "p50_ms": 615.6,
+    "p99_ms": 750.4,
+    "max_ms": 799.2
+  }
+]

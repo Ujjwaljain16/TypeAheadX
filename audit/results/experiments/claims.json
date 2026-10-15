@@ -1,0 +1,66 @@
+{
+  "ownership_150_vnodes_pct": {
+    "redis-a": 39.65,
+    "redis-b": 28.64,
+    "redis-c": 31.71
+  },
+  "ownership_150_max_abs_dev_from_33.33_pts": 6.32,
+  "ownership_500_vnodes_pct": {
+    "redis-a": 33.86,
+    "redis-b": 34.58,
+    "redis-c": 31.57
+  },
+  "ownership_500_max_abs_dev_from_33.33_pts": 1.76,
+  "keys_moved_adding_4th_node_pct": 26.36,
+  "ideal_pct": 25.0,
+  "final_benchmark_workload": {
+    "note": "np.random.zipf(a=1.3) clipped to 10k ranks, queries 'query_item_N' (NOT in the dataset), 20 seeds",
+    "request_share_per_node_pct_by_seed": [
+      {
+        "redis-a": 59.9,
+        "redis-b": 21.1,
+        "redis-c": 19.0
+      },
+      {
+        "redis-a": 60.2,
+        "redis-b": 20.9,
+        "redis-c": 18.9
+      },
+      {
+        "redis-a": 60.3,
+        "redis-b": 21.0,
+        "redis-c": 18.7
+      },
+      {
+        "redis-a": 60.0,
+        "redis-b": 21.2,
+        "redis-c": 18.8
+      },
+      {
+        "redis-a": 59.8,
+        "redis-b": 21.1,
+        "redis-c": 19.1
+      },
+      {
+        "redis-a": 59.7,
+        "redis-b": 21.3,
+        "redis-c": 19.1
+      }
+    ],
+    "node_with_max_share_range_pct": [
+      60.3,
+      59.7
+    ],
+    "top1_query_share_pct_range": [
+      25.2,
+      25.7
+    ],
+    "distinct_keys_range": null,
+    "max_possible_hit_rate_pct_of_a_cold_cache_range": [
+      95.6,
+      95.7
+    ]
+  },
+  "interpretation": "A single key ('iphone 16' = rank 1) receives roughly a quarter to a third of all requests under this synthetic Zipf(1.3); whichever node owns that key gets that share on top of ~1/3 of the rest. That is a property of the workload, not of the hash ring, and the 10 000 distinct synthetic keys cap the miss count regardless of cache design.",
+  "final_benchmark_concurrency": "requests are sent in chunks of 100 with asyncio.gather and the next chunk starts only when the whole chunk finished (closed loop); in-flight requests never exceed 100, not 100 000, and latency excludes queueing that open-loop arrivals would incur"
+}

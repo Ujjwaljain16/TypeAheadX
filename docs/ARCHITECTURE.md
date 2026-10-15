@@ -84,7 +84,7 @@ Bisect 500 Virtual Nodes to find physical owner
 Query B-Tree Index: 
 SELECT query FROM queries 
 WHERE query LIKE 'iph%' 
-ORDER BY historical_count + (10.0 * recent_count) DESC 
+ORDER BY historical_count + 10.0 * recent_count * exp(-λ·hours_since_last_update) DESC 
 LIMIT 10
        ↓
 [FastAPI]
@@ -140,7 +140,7 @@ TypeAheadX ranks queries using a composite score that balances all-time populari
 
 **Core Formula:**
 ```math
-final_score = historical_count + (10.0 × recent_count)
+final_score = historical_count + β × recent_count × e^(−λ · hours_since_recent_count_was_updated)
 ```
 
 **Variables Explained:**
@@ -154,7 +154,7 @@ To ensure trends fade out when they are no longer relevant, we apply exponential
 hours_elapsed = (now - last_decay_at).total_seconds() / 3600
 new_recent_count = old_recent_count * math.exp(-lambda * hours_elapsed) + new_searches
 ```
-This guarantees that viral events spike the ranking quickly but decay organically over time without requiring heavy offline CRON jobs.
+The same decay is applied again **at read time** (the factor `e^(−λ·Δt)` in the score), because `recent_count` is only rewritten when a query is searched — without it, the stored value of a query nobody searches any more would never fade. The score is computed only for rows matching the prefix, so no index on it is needed (the former `idx_trending_score` was removed). This guarantees that viral events spike the ranking quickly but decay organically over time without requiring heavy offline CRON jobs. Queries that were never searched through `/search` have `recent_count = 0` and rank exactly by `historical_count`.
 
 ---
 

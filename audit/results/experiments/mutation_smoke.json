@@ -1,0 +1,138 @@
+[
+  {
+    "id": "M1",
+    "desc": "invalidation deletes 'suggest:<p>' while reads use 'suggestion:<p>' (original F-003)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 6 passed in 1.35s"
+    ]
+  },
+  {
+    "id": "M2",
+    "desc": "LIKE input not escaped (original F-002)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 2 passed in 1.73s"
+    ]
+  },
+  {
+    "id": "M3",
+    "desc": "write path skips validation (original F-004/F-005)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 8 passed, 1 warning in 3.45s"
+    ]
+  },
+  {
+    "id": "M4",
+    "desc": "failed flush discards events instead of re-queueing (original F-005)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 1 passed in 1.12s"
+    ]
+  },
+  {
+    "id": "M5",
+    "desc": "upsert overwrites instead of accumulating (lost update class)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 14 passed in 3.09s"
+    ]
+  },
+  {
+    "id": "M6",
+    "desc": "circuit breaker never opens (original F-007)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed in 0.90s"
+    ]
+  },
+  {
+    "id": "M7",
+    "desc": "write buffer unbounded (original F-011)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 2 passed in 1.16s"
+    ]
+  },
+  {
+    "id": "M8",
+    "desc": "no bisect: poison row kills the batch (original F-005)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 3 passed in 1.21s"
+    ]
+  },
+  {
+    "id": "M9",
+    "desc": "upsert rows not ordered: concurrent flushers can deadlock",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 20 passed in 3.78s"
+    ]
+  },
+  {
+    "id": "M10",
+    "desc": "node-down-at-startup never retried (original F-008)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 2 passed in 0.91s"
+    ]
+  },
+  {
+    "id": "M13",
+    "desc": "redis client keeps the library's default retries (outage amplification, found during the audit)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 7 passed in 7.59s"
+    ]
+  },
+  {
+    "id": "M14",
+    "desc": "database read has no deadline (F-27)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 1 passed in 30.80s"
+    ]
+  },
+  {
+    "id": "M15",
+    "desc": "no bulkhead: hung calls can take unlimited workers/slots (F-27)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 2 passed in 1.25s"
+    ]
+  },
+  {
+    "id": "M16",
+    "desc": "trending term ignored in ranking (F-10)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 21 passed in 3.94s"
+    ]
+  },
+  {
+    "id": "M17",
+    "desc": "ranking does not decay at read time (F-10)",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 22 passed in 3.89s"
+    ]
+  },
+  {
+    "id": "M11",
+    "desc": "ring ignores wrap-around",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 7 passed in 1.03s"
+    ]
+  },
+  {
+    "id": "M12",
+    "desc": "normalization stops lower-casing",
+    "status": "KILLED",
+    "pytest_tail": [
+      "1 failed, 7 passed in 1.53s"
+    ]
+  }
+]

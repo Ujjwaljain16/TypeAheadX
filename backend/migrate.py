@@ -8,8 +8,9 @@ def migrate():
             conn.execute(text("ALTER TABLE queries ADD COLUMN IF NOT EXISTS recent_count FLOAT NOT NULL DEFAULT 0.0;"))
             conn.execute(text("ALTER TABLE queries ADD COLUMN IF NOT EXISTS last_decay_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
             
-            # Create index for trending score
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_trending_score ON queries ((historical_count + 10.0 * recent_count) DESC);"))
+            # The expression index on the trending score is never used by the (read-time decayed) ranking
+            # and only costs write maintenance, so older databases drop it.
+            conn.execute(text("DROP INDEX IF EXISTS idx_trending_score;"))
             
             conn.commit()
             print("Migration completed successfully.")

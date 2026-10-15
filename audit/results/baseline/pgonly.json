@@ -1,0 +1,1670 @@
+[
+  {
+    "scenario": "pgonly",
+    "tag": "",
+    "rep": 0,
+    "rate": 25.0,
+    "workers": 1,
+    "seed": 1234,
+    "duration_s": 20.0,
+    "warmup_s": 5.0,
+    "summary": {
+      "offered_rps": 25.0,
+      "measured_window_s": 20.0,
+      "scheduled": 500,
+      "completed": 500,
+      "ok": 500,
+      "errors": 0,
+      "timeouts": 0,
+      "status_counts": {
+        "200": 500
+      },
+      "achieved_ok_rps": 25.0,
+      "error_rate": 0.0,
+      "unfinished": 0,
+      "n_latency_samples": 500,
+      "p50_ms": 9.571,
+      "p90_ms": 14.471,
+      "p95_ms": 17.068,
+      "p99_ms": 25.096,
+      "p99_9_ms": 29.63,
+      "max_ms": 32.17,
+      "mean_ms": 10.129,
+      "all_p99_ms_incl_errors": 25.096,
+      "send_lag_p99_ms": 2.394,
+      "send_lag_max_ms": 10.505,
+      "wall_seconds": 24.97
+    },
+    "resources": {
+      "server_cpu_pct_mean": 12.7,
+      "server_cpu_pct_max": 25.0,
+      "server_rss_mb_max": 86.4,
+      "server_threads_max": 0,
+      "n_samples": 38
+    },
+    "pg_delta": {
+      "xacts": 519,
+      "blks_hit": 189432,
+      "blks_read": 0,
+      "tup_returned": 559988,
+      "tup_fetched": 559981,
+      "tup_inserted": 0,
+      "tup_updated": 0,
+      "deadlocks": 0,
+      "temp_files": 0,
+      "active_conns": 0,
+      "total_conns": 0
+    },
+    "pg_end": {
+      "active_conns": 1,
+      "total_conns": 3
+    },
+    "redis_delta": {
+      "a": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "b": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "c": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      }
+    },
+    "redis_hit_rate_pct": null,
+    "redis_end": {
+      "a": {
+        "hits": 82588,
+        "misses": 68154,
+        "cmds": 229245,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "b": {
+        "hits": 58344,
+        "misses": 53024,
+        "cmds": 172664,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "c": {
+        "hits": 65401,
+        "misses": 62915,
+        "cmds": 200496,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      }
+    },
+    "app_cache_metrics_end": {
+      "provider": "distributed",
+      "hits": 0,
+      "misses": 0,
+      "sets": 0,
+      "deletes": 0,
+      "errors": 1250,
+      "hit_rate": 0.0,
+      "node_hits": {}
+    },
+    "server_env": {},
+    "stream_stats": {
+      "requests": 635,
+      "distinct_prefixes": 557,
+      "top1_prefix": "s",
+      "top1_share": 0.0142,
+      "ideal_hit_rate_infinite_cache": 0.1228
+    },
+    "raw_file": "audit/results/baseline/raw/pgonly_r25_rep0_w1.csv.gz"
+  },
+  {
+    "scenario": "pgonly",
+    "tag": "",
+    "rep": 1,
+    "rate": 25.0,
+    "workers": 1,
+    "seed": 1234,
+    "duration_s": 20.0,
+    "warmup_s": 5.0,
+    "summary": {
+      "offered_rps": 25.0,
+      "measured_window_s": 20.0,
+      "scheduled": 500,
+      "completed": 500,
+      "ok": 500,
+      "errors": 0,
+      "timeouts": 0,
+      "status_counts": {
+        "200": 500
+      },
+      "achieved_ok_rps": 25.0,
+      "error_rate": 0.0,
+      "unfinished": 0,
+      "n_latency_samples": 500,
+      "p50_ms": 10.755,
+      "p90_ms": 16.583,
+      "p95_ms": 19.1,
+      "p99_ms": 26.788,
+      "p99_9_ms": 51.891,
+      "max_ms": 58.146,
+      "mean_ms": 11.247,
+      "all_p99_ms_incl_errors": 26.788,
+      "send_lag_p99_ms": 3.775,
+      "send_lag_max_ms": 39.355,
+      "wall_seconds": 24.96
+    },
+    "resources": {
+      "server_cpu_pct_mean": 12.2,
+      "server_cpu_pct_max": 22.9,
+      "server_rss_mb_max": 86.4,
+      "server_threads_max": 0,
+      "n_samples": 38
+    },
+    "pg_delta": {
+      "xacts": 513,
+      "blks_hit": 186867,
+      "blks_read": 0,
+      "tup_returned": 557390,
+      "tup_fetched": 557384,
+      "tup_inserted": 0,
+      "tup_updated": 0,
+      "deadlocks": 0,
+      "temp_files": 0,
+      "active_conns": 0,
+      "total_conns": 0
+    },
+    "pg_end": {
+      "active_conns": 1,
+      "total_conns": 3
+    },
+    "redis_delta": {
+      "a": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "b": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "c": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      }
+    },
+    "redis_hit_rate_pct": null,
+    "redis_end": {
+      "a": {
+        "hits": 82588,
+        "misses": 68154,
+        "cmds": 229252,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "b": {
+        "hits": 58344,
+        "misses": 53024,
+        "cmds": 172671,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "c": {
+        "hits": 65401,
+        "misses": 62915,
+        "cmds": 200503,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      }
+    },
+    "app_cache_metrics_end": {
+      "provider": "distributed",
+      "hits": 0,
+      "misses": 0,
+      "sets": 0,
+      "deletes": 0,
+      "errors": 1250,
+      "hit_rate": 0.0,
+      "node_hits": {}
+    },
+    "server_env": {},
+    "stream_stats": {
+      "requests": 635,
+      "distinct_prefixes": 557,
+      "top1_prefix": "s",
+      "top1_share": 0.0142,
+      "ideal_hit_rate_infinite_cache": 0.1228
+    },
+    "raw_file": "audit/results/baseline/raw/pgonly_r25_rep1_w1.csv.gz"
+  },
+  {
+    "scenario": "pgonly",
+    "tag": "",
+    "rep": 2,
+    "rate": 25.0,
+    "workers": 1,
+    "seed": 1234,
+    "duration_s": 20.0,
+    "warmup_s": 5.0,
+    "summary": {
+      "offered_rps": 25.0,
+      "measured_window_s": 20.0,
+      "scheduled": 500,
+      "completed": 500,
+      "ok": 500,
+      "errors": 0,
+      "timeouts": 0,
+      "status_counts": {
+        "200": 500
+      },
+      "achieved_ok_rps": 25.0,
+      "error_rate": 0.0,
+      "unfinished": 0,
+      "n_latency_samples": 500,
+      "p50_ms": 7.498,
+      "p90_ms": 13.2,
+      "p95_ms": 15.648,
+      "p99_ms": 20.245,
+      "p99_9_ms": 30.167,
+      "max_ms": 30.654,
+      "mean_ms": 8.721,
+      "all_p99_ms_incl_errors": 20.245,
+      "send_lag_p99_ms": 0.983,
+      "send_lag_max_ms": 3.153,
+      "wall_seconds": 24.97
+    },
+    "resources": {
+      "server_cpu_pct_mean": 10.9,
+      "server_cpu_pct_max": 21.2,
+      "server_rss_mb_max": 86.5,
+      "server_threads_max": 0,
+      "n_samples": 38
+    },
+    "pg_delta": {
+      "xacts": 514,
+      "blks_hit": 186898,
+      "blks_read": 0,
+      "tup_returned": 557405,
+      "tup_fetched": 557398,
+      "tup_inserted": 0,
+      "tup_updated": 0,
+      "deadlocks": 0,
+      "temp_files": 0,
+      "active_conns": 0,
+      "total_conns": 0
+    },
+    "pg_end": {
+      "active_conns": 1,
+      "total_conns": 3
+    },
+    "redis_delta": {
+      "a": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "b": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "c": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      }
+    },
+    "redis_hit_rate_pct": null,
+    "redis_end": {
+      "a": {
+        "hits": 82588,
+        "misses": 68154,
+        "cmds": 229259,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "b": {
+        "hits": 58344,
+        "misses": 53024,
+        "cmds": 172678,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "c": {
+        "hits": 65401,
+        "misses": 62915,
+        "cmds": 200510,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      }
+    },
+    "app_cache_metrics_end": {
+      "provider": "distributed",
+      "hits": 0,
+      "misses": 0,
+      "sets": 0,
+      "deletes": 0,
+      "errors": 1250,
+      "hit_rate": 0.0,
+      "node_hits": {}
+    },
+    "server_env": {},
+    "stream_stats": {
+      "requests": 635,
+      "distinct_prefixes": 557,
+      "top1_prefix": "s",
+      "top1_share": 0.0142,
+      "ideal_hit_rate_infinite_cache": 0.1228
+    },
+    "raw_file": "audit/results/baseline/raw/pgonly_r25_rep2_w1.csv.gz"
+  },
+  {
+    "scenario": "pgonly",
+    "tag": "",
+    "rep": 0,
+    "rate": 50.0,
+    "workers": 1,
+    "seed": 1234,
+    "duration_s": 20.0,
+    "warmup_s": 5.0,
+    "summary": {
+      "offered_rps": 50.0,
+      "measured_window_s": 20.0,
+      "scheduled": 1000,
+      "completed": 1000,
+      "ok": 1000,
+      "errors": 0,
+      "timeouts": 0,
+      "status_counts": {
+        "200": 1000
+      },
+      "achieved_ok_rps": 50.0,
+      "error_rate": 0.0,
+      "unfinished": 0,
+      "n_latency_samples": 1000,
+      "p50_ms": 6.43,
+      "p90_ms": 8.947,
+      "p95_ms": 10.755,
+      "p99_ms": 12.855,
+      "p99_9_ms": 19.732,
+      "max_ms": 25.583,
+      "mean_ms": 6.983,
+      "all_p99_ms_incl_errors": 12.855,
+      "send_lag_p99_ms": 1.85,
+      "send_lag_max_ms": 8.127,
+      "wall_seconds": 24.99
+    },
+    "resources": {
+      "server_cpu_pct_mean": 19.3,
+      "server_cpu_pct_max": 28.1,
+      "server_rss_mb_max": 87.0,
+      "server_threads_max": 0,
+      "n_samples": 38
+    },
+    "pg_delta": {
+      "xacts": 1038,
+      "blks_hit": 408223,
+      "blks_read": 0,
+      "tup_returned": 1238809,
+      "tup_fetched": 1238802,
+      "tup_inserted": 0,
+      "tup_updated": 0,
+      "deadlocks": 0,
+      "temp_files": 0,
+      "active_conns": 0,
+      "total_conns": 0
+    },
+    "pg_end": {
+      "active_conns": 1,
+      "total_conns": 4
+    },
+    "redis_delta": {
+      "a": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "b": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "c": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      }
+    },
+    "redis_hit_rate_pct": null,
+    "redis_end": {
+      "a": {
+        "hits": 82588,
+        "misses": 68154,
+        "cmds": 229266,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "b": {
+        "hits": 58344,
+        "misses": 53024,
+        "cmds": 172685,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "c": {
+        "hits": 65401,
+        "misses": 62915,
+        "cmds": 200517,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      }
+    },
+    "app_cache_metrics_end": {
+      "provider": "distributed",
+      "hits": 0,
+      "misses": 0,
+      "sets": 0,
+      "deletes": 0,
+      "errors": 2500,
+      "hit_rate": 0.0,
+      "node_hits": {}
+    },
+    "server_env": {},
+    "stream_stats": {
+      "requests": 1260,
+      "distinct_prefixes": 1034,
+      "top1_prefix": "b",
+      "top1_share": 0.0135,
+      "ideal_hit_rate_infinite_cache": 0.1794
+    },
+    "raw_file": "audit/results/baseline/raw/pgonly_r50_rep0_w1.csv.gz"
+  },
+  {
+    "scenario": "pgonly",
+    "tag": "",
+    "rep": 1,
+    "rate": 50.0,
+    "workers": 1,
+    "seed": 1234,
+    "duration_s": 20.0,
+    "warmup_s": 5.0,
+    "summary": {
+      "offered_rps": 50.0,
+      "measured_window_s": 20.0,
+      "scheduled": 1000,
+      "completed": 1000,
+      "ok": 1000,
+      "errors": 0,
+      "timeouts": 0,
+      "status_counts": {
+        "200": 1000
+      },
+      "achieved_ok_rps": 50.0,
+      "error_rate": 0.0,
+      "unfinished": 0,
+      "n_latency_samples": 1000,
+      "p50_ms": 6.361,
+      "p90_ms": 9.127,
+      "p95_ms": 10.531,
+      "p99_ms": 12.583,
+      "p99_9_ms": 14.32,
+      "max_ms": 23.323,
+      "mean_ms": 6.857,
+      "all_p99_ms_incl_errors": 12.583,
+      "send_lag_p99_ms": 0.828,
+      "send_lag_max_ms": 9.179,
+      "wall_seconds": 24.99
+    },
+    "resources": {
+      "server_cpu_pct_mean": 18.1,
+      "server_cpu_pct_max": 27.3,
+      "server_rss_mb_max": 87.3,
+      "server_threads_max": 0,
+      "n_samples": 38
+    },
+    "pg_delta": {
+      "xacts": 1017,
+      "blks_hit": 400706,
+      "blks_read": 0,
+      "tup_returned": 1210141,
+      "tup_fetched": 1210135,
+      "tup_inserted": 0,
+      "tup_updated": 0,
+      "deadlocks": 0,
+      "temp_files": 0,
+      "active_conns": 0,
+      "total_conns": 0
+    },
+    "pg_end": {
+      "active_conns": 1,
+      "total_conns": 5
+    },
+    "redis_delta": {
+      "a": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "b": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "c": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      }
+    },
+    "redis_hit_rate_pct": null,
+    "redis_end": {
+      "a": {
+        "hits": 82588,
+        "misses": 68154,
+        "cmds": 229273,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "b": {
+        "hits": 58344,
+        "misses": 53024,
+        "cmds": 172692,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "c": {
+        "hits": 65401,
+        "misses": 62915,
+        "cmds": 200524,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      }
+    },
+    "app_cache_metrics_end": {
+      "provider": "distributed",
+      "hits": 0,
+      "misses": 0,
+      "sets": 0,
+      "deletes": 0,
+      "errors": 2500,
+      "hit_rate": 0.0,
+      "node_hits": {}
+    },
+    "server_env": {},
+    "stream_stats": {
+      "requests": 1260,
+      "distinct_prefixes": 1034,
+      "top1_prefix": "b",
+      "top1_share": 0.0135,
+      "ideal_hit_rate_infinite_cache": 0.1794
+    },
+    "raw_file": "audit/results/baseline/raw/pgonly_r50_rep1_w1.csv.gz"
+  },
+  {
+    "scenario": "pgonly",
+    "tag": "",
+    "rep": 2,
+    "rate": 50.0,
+    "workers": 1,
+    "seed": 1234,
+    "duration_s": 20.0,
+    "warmup_s": 5.0,
+    "summary": {
+      "offered_rps": 50.0,
+      "measured_window_s": 20.0,
+      "scheduled": 1000,
+      "completed": 1000,
+      "ok": 1000,
+      "errors": 0,
+      "timeouts": 0,
+      "status_counts": {
+        "200": 1000
+      },
+      "achieved_ok_rps": 50.0,
+      "error_rate": 0.0,
+      "unfinished": 0,
+      "n_latency_samples": 1000,
+      "p50_ms": 6.38,
+      "p90_ms": 8.882,
+      "p95_ms": 10.669,
+      "p99_ms": 13.263,
+      "p99_9_ms": 21.587,
+      "max_ms": 29.408,
+      "mean_ms": 6.95,
+      "all_p99_ms_incl_errors": 13.263,
+      "send_lag_p99_ms": 1.978,
+      "send_lag_max_ms": 9.363,
+      "wall_seconds": 24.99
+    },
+    "resources": {
+      "server_cpu_pct_mean": 17.8,
+      "server_cpu_pct_max": 34.4,
+      "server_rss_mb_max": 86.5,
+      "server_threads_max": 0,
+      "n_samples": 38
+    },
+    "pg_delta": {
+      "xacts": 995,
+      "blks_hit": 391952,
+      "blks_read": 0,
+      "tup_returned": 1175930,
+      "tup_fetched": 1175923,
+      "tup_inserted": 0,
+      "tup_updated": 0,
+      "deadlocks": 0,
+      "temp_files": 0,
+      "active_conns": 0,
+      "total_conns": 0
+    },
+    "pg_end": {
+      "active_conns": 1,
+      "total_conns": 3
+    },
+    "redis_delta": {
+      "a": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "b": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "c": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      }
+    },
+    "redis_hit_rate_pct": null,
+    "redis_end": {
+      "a": {
+        "hits": 82588,
+        "misses": 68154,
+        "cmds": 229280,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "b": {
+        "hits": 58344,
+        "misses": 53024,
+        "cmds": 172699,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "c": {
+        "hits": 65401,
+        "misses": 62915,
+        "cmds": 200531,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      }
+    },
+    "app_cache_metrics_end": {
+      "provider": "distributed",
+      "hits": 0,
+      "misses": 0,
+      "sets": 0,
+      "deletes": 0,
+      "errors": 2500,
+      "hit_rate": 0.0,
+      "node_hits": {}
+    },
+    "server_env": {},
+    "stream_stats": {
+      "requests": 1260,
+      "distinct_prefixes": 1034,
+      "top1_prefix": "b",
+      "top1_share": 0.0135,
+      "ideal_hit_rate_infinite_cache": 0.1794
+    },
+    "raw_file": "audit/results/baseline/raw/pgonly_r50_rep2_w1.csv.gz"
+  },
+  {
+    "scenario": "pgonly",
+    "tag": "",
+    "rep": 0,
+    "rate": 100.0,
+    "workers": 1,
+    "seed": 1234,
+    "duration_s": 20.0,
+    "warmup_s": 5.0,
+    "summary": {
+      "offered_rps": 100.0,
+      "measured_window_s": 20.0,
+      "scheduled": 2000,
+      "completed": 2000,
+      "ok": 2000,
+      "errors": 0,
+      "timeouts": 0,
+      "status_counts": {
+        "200": 2000
+      },
+      "achieved_ok_rps": 100.0,
+      "error_rate": 0.0,
+      "unfinished": 0,
+      "n_latency_samples": 2000,
+      "p50_ms": 5.893,
+      "p90_ms": 8.71,
+      "p95_ms": 10.518,
+      "p99_ms": 13.73,
+      "p99_9_ms": 20.436,
+      "max_ms": 28.831,
+      "mean_ms": 6.458,
+      "all_p99_ms_incl_errors": 13.73,
+      "send_lag_p99_ms": 1.778,
+      "send_lag_max_ms": 9.727,
+      "wall_seconds": 25.0
+    },
+    "resources": {
+      "server_cpu_pct_mean": 32.9,
+      "server_cpu_pct_max": 46.9,
+      "server_rss_mb_max": 87.7,
+      "server_threads_max": 0,
+      "n_samples": 38
+    },
+    "pg_delta": {
+      "xacts": 1990,
+      "blks_hit": 772070,
+      "blks_read": 0,
+      "tup_returned": 2419636,
+      "tup_fetched": 2418752,
+      "tup_inserted": 0,
+      "tup_updated": 0,
+      "deadlocks": 0,
+      "temp_files": 0,
+      "active_conns": 0,
+      "total_conns": 0
+    },
+    "pg_end": {
+      "active_conns": 1,
+      "total_conns": 6
+    },
+    "redis_delta": {
+      "a": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "b": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "c": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      }
+    },
+    "redis_hit_rate_pct": null,
+    "redis_end": {
+      "a": {
+        "hits": 82588,
+        "misses": 68154,
+        "cmds": 229287,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "b": {
+        "hits": 58344,
+        "misses": 53024,
+        "cmds": 172706,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "c": {
+        "hits": 65401,
+        "misses": 62915,
+        "cmds": 200538,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      }
+    },
+    "app_cache_metrics_end": {
+      "provider": "distributed",
+      "hits": 0,
+      "misses": 0,
+      "sets": 0,
+      "deletes": 0,
+      "errors": 5000,
+      "hit_rate": 0.0,
+      "node_hits": {}
+    },
+    "server_env": {},
+    "stream_stats": {
+      "requests": 2510,
+      "distinct_prefixes": 1957,
+      "top1_prefix": "s",
+      "top1_share": 0.0116,
+      "ideal_hit_rate_infinite_cache": 0.2203
+    },
+    "raw_file": "audit/results/baseline/raw/pgonly_r100_rep0_w1.csv.gz"
+  },
+  {
+    "scenario": "pgonly",
+    "tag": "",
+    "rep": 1,
+    "rate": 100.0,
+    "workers": 1,
+    "seed": 1234,
+    "duration_s": 20.0,
+    "warmup_s": 5.0,
+    "summary": {
+      "offered_rps": 100.0,
+      "measured_window_s": 20.0,
+      "scheduled": 2000,
+      "completed": 2000,
+      "ok": 2000,
+      "errors": 0,
+      "timeouts": 0,
+      "status_counts": {
+        "200": 2000
+      },
+      "achieved_ok_rps": 100.0,
+      "error_rate": 0.0,
+      "unfinished": 0,
+      "n_latency_samples": 2000,
+      "p50_ms": 5.95,
+      "p90_ms": 8.874,
+      "p95_ms": 10.912,
+      "p99_ms": 13.998,
+      "p99_9_ms": 31.509,
+      "max_ms": 33.382,
+      "mean_ms": 6.611,
+      "all_p99_ms_incl_errors": 13.998,
+      "send_lag_p99_ms": 1.589,
+      "send_lag_max_ms": 22.279,
+      "wall_seconds": 25.0
+    },
+    "resources": {
+      "server_cpu_pct_mean": 30.7,
+      "server_cpu_pct_max": 46.9,
+      "server_rss_mb_max": 87.8,
+      "server_threads_max": 0,
+      "n_samples": 38
+    },
+    "pg_delta": {
+      "xacts": 1988,
+      "blks_hit": 770478,
+      "blks_read": 0,
+      "tup_returned": 2408402,
+      "tup_fetched": 2408395,
+      "tup_inserted": 0,
+      "tup_updated": 0,
+      "deadlocks": 0,
+      "temp_files": 0,
+      "active_conns": 0,
+      "total_conns": 0
+    },
+    "pg_end": {
+      "active_conns": 1,
+      "total_conns": 6
+    },
+    "redis_delta": {
+      "a": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "b": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "c": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      }
+    },
+    "redis_hit_rate_pct": null,
+    "redis_end": {
+      "a": {
+        "hits": 82588,
+        "misses": 68154,
+        "cmds": 229294,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "b": {
+        "hits": 58344,
+        "misses": 53024,
+        "cmds": 172713,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "c": {
+        "hits": 65401,
+        "misses": 62915,
+        "cmds": 200545,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      }
+    },
+    "app_cache_metrics_end": {
+      "provider": "distributed",
+      "hits": 0,
+      "misses": 0,
+      "sets": 0,
+      "deletes": 0,
+      "errors": 5000,
+      "hit_rate": 0.0,
+      "node_hits": {}
+    },
+    "server_env": {},
+    "stream_stats": {
+      "requests": 2510,
+      "distinct_prefixes": 1957,
+      "top1_prefix": "s",
+      "top1_share": 0.0116,
+      "ideal_hit_rate_infinite_cache": 0.2203
+    },
+    "raw_file": "audit/results/baseline/raw/pgonly_r100_rep1_w1.csv.gz"
+  },
+  {
+    "scenario": "pgonly",
+    "tag": "",
+    "rep": 2,
+    "rate": 100.0,
+    "workers": 1,
+    "seed": 1234,
+    "duration_s": 20.0,
+    "warmup_s": 5.0,
+    "summary": {
+      "offered_rps": 100.0,
+      "measured_window_s": 20.0,
+      "scheduled": 2000,
+      "completed": 2000,
+      "ok": 2000,
+      "errors": 0,
+      "timeouts": 0,
+      "status_counts": {
+        "200": 2000
+      },
+      "achieved_ok_rps": 100.0,
+      "error_rate": 0.0,
+      "unfinished": 0,
+      "n_latency_samples": 2000,
+      "p50_ms": 6.23,
+      "p90_ms": 9.077,
+      "p95_ms": 11.575,
+      "p99_ms": 14.058,
+      "p99_9_ms": 23.451,
+      "max_ms": 35.805,
+      "mean_ms": 6.831,
+      "all_p99_ms_incl_errors": 14.058,
+      "send_lag_p99_ms": 1.806,
+      "send_lag_max_ms": 23.154,
+      "wall_seconds": 25.0
+    },
+    "resources": {
+      "server_cpu_pct_mean": 33.4,
+      "server_cpu_pct_max": 43.8,
+      "server_rss_mb_max": 89.1,
+      "server_threads_max": 0,
+      "n_samples": 38
+    },
+    "pg_delta": {
+      "xacts": 1988,
+      "blks_hit": 770158,
+      "blks_read": 0,
+      "tup_returned": 2393640,
+      "tup_fetched": 2392756,
+      "tup_inserted": 0,
+      "tup_updated": 0,
+      "deadlocks": 0,
+      "temp_files": 0,
+      "active_conns": -1,
+      "total_conns": 0
+    },
+    "pg_end": {
+      "active_conns": 1,
+      "total_conns": 6
+    },
+    "redis_delta": {
+      "a": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "b": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "c": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      }
+    },
+    "redis_hit_rate_pct": null,
+    "redis_end": {
+      "a": {
+        "hits": 82588,
+        "misses": 68154,
+        "cmds": 229301,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "b": {
+        "hits": 58344,
+        "misses": 53024,
+        "cmds": 172720,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "c": {
+        "hits": 65401,
+        "misses": 62915,
+        "cmds": 200552,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      }
+    },
+    "app_cache_metrics_end": {
+      "provider": "distributed",
+      "hits": 0,
+      "misses": 0,
+      "sets": 0,
+      "deletes": 0,
+      "errors": 5000,
+      "hit_rate": 0.0,
+      "node_hits": {}
+    },
+    "server_env": {},
+    "stream_stats": {
+      "requests": 2510,
+      "distinct_prefixes": 1957,
+      "top1_prefix": "s",
+      "top1_share": 0.0116,
+      "ideal_hit_rate_infinite_cache": 0.2203
+    },
+    "raw_file": "audit/results/baseline/raw/pgonly_r100_rep2_w1.csv.gz"
+  },
+  {
+    "scenario": "pgonly",
+    "tag": "",
+    "rep": 0,
+    "rate": 150.0,
+    "workers": 1,
+    "seed": 1234,
+    "duration_s": 20.0,
+    "warmup_s": 5.0,
+    "summary": {
+      "offered_rps": 150.0,
+      "measured_window_s": 20.0,
+      "scheduled": 3000,
+      "completed": 3000,
+      "ok": 3000,
+      "errors": 0,
+      "timeouts": 0,
+      "status_counts": {
+        "200": 3000
+      },
+      "achieved_ok_rps": 150.0,
+      "error_rate": 0.0,
+      "unfinished": 0,
+      "n_latency_samples": 3000,
+      "p50_ms": 6.421,
+      "p90_ms": 10.911,
+      "p95_ms": 12.475,
+      "p99_ms": 18.835,
+      "p99_9_ms": 25.158,
+      "max_ms": 29.33,
+      "mean_ms": 7.554,
+      "all_p99_ms_incl_errors": 18.835,
+      "send_lag_p99_ms": 0.995,
+      "send_lag_max_ms": 12.274,
+      "wall_seconds": 25.0
+    },
+    "resources": {
+      "server_cpu_pct_mean": 53.6,
+      "server_cpu_pct_max": 68.8,
+      "server_rss_mb_max": 88.9,
+      "server_threads_max": 0,
+      "n_samples": 38
+    },
+    "pg_delta": {
+      "xacts": 3076,
+      "blks_hit": 1138508,
+      "blks_read": 0,
+      "tup_returned": 3518549,
+      "tup_fetched": 3518542,
+      "tup_inserted": 0,
+      "tup_updated": 0,
+      "deadlocks": 0,
+      "temp_files": 0,
+      "active_conns": 0,
+      "total_conns": 0
+    },
+    "pg_end": {
+      "active_conns": 1,
+      "total_conns": 6
+    },
+    "redis_delta": {
+      "a": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "b": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "c": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      }
+    },
+    "redis_hit_rate_pct": null,
+    "redis_end": {
+      "a": {
+        "hits": 82588,
+        "misses": 68154,
+        "cmds": 229308,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "b": {
+        "hits": 58344,
+        "misses": 53024,
+        "cmds": 172727,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "c": {
+        "hits": 65401,
+        "misses": 62915,
+        "cmds": 200559,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      }
+    },
+    "app_cache_metrics_end": {
+      "provider": "distributed",
+      "hits": 0,
+      "misses": 0,
+      "sets": 0,
+      "deletes": 0,
+      "errors": 7500,
+      "hit_rate": 0.0,
+      "node_hits": {}
+    },
+    "server_env": {},
+    "stream_stats": {
+      "requests": 3760,
+      "distinct_prefixes": 2845,
+      "top1_prefix": "s",
+      "top1_share": 0.0114,
+      "ideal_hit_rate_infinite_cache": 0.2434
+    },
+    "raw_file": "audit/results/baseline/raw/pgonly_r150_rep0_w1.csv.gz"
+  },
+  {
+    "scenario": "pgonly",
+    "tag": "",
+    "rep": 1,
+    "rate": 150.0,
+    "workers": 1,
+    "seed": 1234,
+    "duration_s": 20.0,
+    "warmup_s": 5.0,
+    "summary": {
+      "offered_rps": 150.0,
+      "measured_window_s": 20.0,
+      "scheduled": 3000,
+      "completed": 3000,
+      "ok": 3000,
+      "errors": 0,
+      "timeouts": 0,
+      "status_counts": {
+        "200": 3000
+      },
+      "achieved_ok_rps": 150.0,
+      "error_rate": 0.0,
+      "unfinished": 0,
+      "n_latency_samples": 3000,
+      "p50_ms": 6.058,
+      "p90_ms": 10.109,
+      "p95_ms": 11.166,
+      "p99_ms": 14.094,
+      "p99_9_ms": 18.212,
+      "max_ms": 21.109,
+      "mean_ms": 6.734,
+      "all_p99_ms_incl_errors": 14.094,
+      "send_lag_p99_ms": 1.82,
+      "send_lag_max_ms": 9.444,
+      "wall_seconds": 25.0
+    },
+    "resources": {
+      "server_cpu_pct_mean": 53.2,
+      "server_cpu_pct_max": 84.4,
+      "server_rss_mb_max": 88.7,
+      "server_threads_max": 0,
+      "n_samples": 38
+    },
+    "pg_delta": {
+      "xacts": 3057,
+      "blks_hit": 1132099,
+      "blks_read": 0,
+      "tup_returned": 3511942,
+      "tup_fetched": 3511057,
+      "tup_inserted": 0,
+      "tup_updated": 0,
+      "deadlocks": 0,
+      "temp_files": 0,
+      "active_conns": 0,
+      "total_conns": 0
+    },
+    "pg_end": {
+      "active_conns": 1,
+      "total_conns": 6
+    },
+    "redis_delta": {
+      "a": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "b": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "c": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      }
+    },
+    "redis_hit_rate_pct": null,
+    "redis_end": {
+      "a": {
+        "hits": 82588,
+        "misses": 68154,
+        "cmds": 229315,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "b": {
+        "hits": 58344,
+        "misses": 53024,
+        "cmds": 172734,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "c": {
+        "hits": 65401,
+        "misses": 62915,
+        "cmds": 200566,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      }
+    },
+    "app_cache_metrics_end": {
+      "provider": "distributed",
+      "hits": 0,
+      "misses": 0,
+      "sets": 0,
+      "deletes": 0,
+      "errors": 7500,
+      "hit_rate": 0.0,
+      "node_hits": {}
+    },
+    "server_env": {},
+    "stream_stats": {
+      "requests": 3760,
+      "distinct_prefixes": 2845,
+      "top1_prefix": "s",
+      "top1_share": 0.0114,
+      "ideal_hit_rate_infinite_cache": 0.2434
+    },
+    "raw_file": "audit/results/baseline/raw/pgonly_r150_rep1_w1.csv.gz"
+  },
+  {
+    "scenario": "pgonly",
+    "tag": "",
+    "rep": 2,
+    "rate": 150.0,
+    "workers": 1,
+    "seed": 1234,
+    "duration_s": 20.0,
+    "warmup_s": 5.0,
+    "summary": {
+      "offered_rps": 150.0,
+      "measured_window_s": 20.0,
+      "scheduled": 3000,
+      "completed": 3000,
+      "ok": 3000,
+      "errors": 0,
+      "timeouts": 0,
+      "status_counts": {
+        "200": 3000
+      },
+      "achieved_ok_rps": 150.0,
+      "error_rate": 0.0,
+      "unfinished": 0,
+      "n_latency_samples": 3000,
+      "p50_ms": 5.735,
+      "p90_ms": 10.133,
+      "p95_ms": 11.166,
+      "p99_ms": 13.839,
+      "p99_9_ms": 28.107,
+      "max_ms": 40.645,
+      "mean_ms": 6.605,
+      "all_p99_ms_incl_errors": 13.839,
+      "send_lag_p99_ms": 2.818,
+      "send_lag_max_ms": 27.264,
+      "wall_seconds": 25.0
+    },
+    "resources": {
+      "server_cpu_pct_mean": 49.1,
+      "server_cpu_pct_max": 62.5,
+      "server_rss_mb_max": 89.4,
+      "server_threads_max": 0,
+      "n_samples": 38
+    },
+    "pg_delta": {
+      "xacts": 2975,
+      "blks_hit": 1104632,
+      "blks_read": 0,
+      "tup_returned": 3428024,
+      "tup_fetched": 3428017,
+      "tup_inserted": 0,
+      "tup_updated": 0,
+      "deadlocks": 0,
+      "temp_files": 0,
+      "active_conns": 0,
+      "total_conns": 0
+    },
+    "pg_end": {
+      "active_conns": 1,
+      "total_conns": 6
+    },
+    "redis_delta": {
+      "a": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "b": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      },
+      "c": {
+        "hits": 0,
+        "misses": 0,
+        "cmds": 3,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 0.0,
+        "keys": 0
+      }
+    },
+    "redis_hit_rate_pct": null,
+    "redis_end": {
+      "a": {
+        "hits": 82588,
+        "misses": 68154,
+        "cmds": 229322,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "b": {
+        "hits": 58344,
+        "misses": 53024,
+        "cmds": 172741,
+        "evicted": 0,
+        "expired": 0,
+        "mem_mb": 1.15,
+        "keys": 0
+      },
+      "c": {
+        "hits": 65401,
+        "misses": 62915,
+        "cmds": 200573,
+        "evicted": 0,
+        "expired": 1,
+        "mem_mb": 1.15,
+        "keys": 0
+      }
+    },
+    "app_cache_metrics_end": {
+      "provider": "distributed",
+      "hits": 0,
+      "misses": 0,
+      "sets": 0,
+      "deletes": 0,
+      "errors": 7500,
+      "hit_rate": 0.0,
+      "node_hits": {}
+    },
+    "server_env": {},
+    "stream_stats": {
+      "requests": 3760,
+      "distinct_prefixes": 2845,
+      "top1_prefix": "s",
+      "top1_share": 0.0114,
+      "ideal_hit_rate_infinite_cache": 0.2434
+    },
+    "raw_file": "audit/results/baseline/raw/pgonly_r150_rep2_w1.csv.gz"
+  }
+]
