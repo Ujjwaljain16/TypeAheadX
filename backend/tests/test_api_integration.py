@@ -196,3 +196,47 @@ def test_searches_make_a_query_trend_end_to_end(client):
     assert q(client, "iphone")[0] == "iphone 12 case"
     r = client.get("/suggest", params={"q": "iphone"}).json()
     assert r["suggestions"][0]["historical_count"] == 347      # the displayed count stays the historical count
+
+
+# ---- hung database (F-27): deadline + breaker + cache keeps working ---------------------------
+def test_hung_database_fails_fast_with_503_while_cached_prefixes_keep_working(client, monkeypatch):
+    import threading
+    import time
+    from app.api.suggestions import get_guard
+    from app.repositories import query_repository
+
+    assert q(client, "iph")                                     # cached before the "freeze"
+    release = threading.Event()
+    real_fetch = query_repository.QueryRepository._fetch
+
+    def hung(self, prefix, limit):
+        release.wait(20)                                        # PostgreSQL stops answering
+        return real_fetch(self, prefix, limit)
+    monkeypatch.setattr(query_repository.QueryRepository, "_fetch", hung)
+    guard = get_guard()
+    time.sleep(1.2)                                             # make sure no breaker state leaks in from other tests
+
+    t0 = time.perf_counter()
+    r = client.get("/suggest", params={"q": "uncached-one"})
+    assert r.status_code == 503 and r.headers["retry-after"] == "2"
+    assert time.perf_counter() - t0 < 2.0                       # deadline 0.5 s, not "until the database answers"
+
+    t0 = time.perf_counter()
+    for i in range(30):                                         # circuit open: instant failures, no threads consumed
+        assert client.get("/suggest", params={"q": f"uncached-{i}"}).status_code == 503
+    assert time.perf_counter() - t0 < 2.0
+    assert q(client, "iph")                                     # cache hits are unaffected by the dead database
+    assert client.get("/ready").status_code == 503
+    assert guard.stats()["timeouts"] >= 1 and guard.stats()["rejected_breaker_open"] >= 30
+    assert client.get("/metrics").json()["database_guard"]["breaker_open"] is True
+
+    release.set()                                               # database recovers
+    time.sleep(1.5)                                             # breaker window (1 s + jitter)
+    deadline = time.time() + 5
+    while time.time() < deadline:
+        if client.get("/suggest", params={"q": "tie"}).status_code == 200:
+            break
+        time.sleep(0.3)
+    else:
+        pytest.fail("service did not recover after the database came back")
+    assert client.get("/ready").status_code == 200

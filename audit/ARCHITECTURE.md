@@ -122,4 +122,7 @@ sequenceDiagram
   database clock); on failure: database reachable ⇒ bisect and drop only the unpersistable row, database unreachable ⇒ re-queue the uncommitted remainder; commit is never followed by a re-queue;
   final flush on shutdown even if the loop thread died; new metrics (`flush_failures`, `events_requeued`, `events_dropped`, flush duration).
 * **Operations:** `/ready` (database ping), `ENABLE_DEBUG_ENDPOINTS`, `CORS_ORIGINS`, DB pool/connect timeouts (5 s), lifespan instead of `on_event`.
-* **Unchanged on purpose:** ranking (`historical_count DESC, query ASC`), response schema, endpoints, cache key format (`suggestion:<prefix>`), TTL 300 s, flush policy (10 s / 100 distinct queries).
+* **Ranking (follow-up commit):** `historical_count + β·recent_count·exp(−λ·hours since the last update)`, decay evaluated at read time; `idx_trending_score` removed. Rows never searched via `/search` rank exactly as before.
+* **Database guard (follow-up commit):** read-path DB calls run behind a deadline (2 s), a concurrency limit (12) and a circuit breaker (`app/database/guard.py`, breaker shared with the Redis nodes in `app/utils/breaker.py`); failures are HTTP 503 + `Retry-After`; cache hits are unaffected. Writes are not guarded (a timed-out write may still execute).
+* **CI (follow-up commit):** `.github/workflows/ci.yml` — backend tests against PostgreSQL + 3 Redis service containers, bandit/ruff/pip-audit, frontend `npm ci` + `tsc` + build.
+* **Unchanged on purpose:** response schema, endpoints, cache key format (`suggestion:<prefix>`), TTL 300 s, flush policy (10 s / 100 distinct queries).

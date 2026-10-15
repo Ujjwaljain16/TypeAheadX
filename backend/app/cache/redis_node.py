@@ -1,11 +1,11 @@
 import logging
-import random
-import threading
 import time
 
 import redis
 from redis.backoff import NoBackoff
 from redis.retry import Retry
+
+from ..utils.breaker import CircuitBreaker
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +26,7 @@ class RedisNode:
         self.host = host
         self.port = port
         self.breaker_seconds = breaker_seconds
-        self._clock = clock
-        self._lock = threading.Lock()
-        self._open_until = 0.0
-        self._probing = False
+        self._breaker = CircuitBreaker(breaker_seconds, clock)
         # redis-py connects lazily, so constructing the client never fails and a node that is down at
         # start-up is picked up automatically once it comes back (previously client=None forever).
         self.client = redis.Redis(
@@ -51,33 +48,21 @@ class RedisNode:
             logger.error(f"Redis node {name} at {host}:{port} not reachable at start-up: {e}")
             self._trip()
 
-    # -- breaker -----------------------------------------------------------------------------
+    # -- breaker (see utils/breaker.py) --------------------------------------------------------
     def _trip(self) -> None:
-        with self._lock:
-            jitter = 1.0 + random.random() * 0.2  # nosec B311          # de-synchronise probes of different processes
-            self._open_until = self._clock() + self.breaker_seconds * jitter
-            self._probing = False
+        self._breaker.record_failure()
 
     def allow(self) -> bool:
         """True if a request may use this node (closed, or this caller is the half-open probe)."""
-        with self._lock:
-            if self._open_until == 0.0:
-                return True
-            if self._clock() < self._open_until or self._probing:
-                return False
-            self._probing = True
-            return True
+        return self._breaker.allow()
 
     def record_success(self) -> None:
-        if self._open_until or self._probing:
-            with self._lock:
-                self._open_until = 0.0
-                self._probing = False
+        if self._breaker.record_success():
             logger.info(f"Redis node {self.name} recovered")
 
     def record_failure(self) -> None:
-        self._trip()
+        self._breaker.record_failure()
 
     @property
     def is_open(self) -> bool:
-        return self._open_until != 0.0 and self._clock() < self._open_until
+        return self._breaker.is_open

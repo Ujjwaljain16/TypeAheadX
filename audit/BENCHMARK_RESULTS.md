@@ -149,14 +149,16 @@ experiment artefact and is *not* a finding). The trade-off of the cap: under ext
   (recovered node used again: 100 hits, 50 keys vs 0/0 in the baseline).
 * Docker `stop`/`pause` on one host is a crude model of a partition; it demonstrates no real fault-domain independence.
 
-## 7. PostgreSQL frozen (`docker pause`) at t = 30 s, released at t = 50 s (60 rps, mixed cascades from cold, 2 reps)
-| variant | error rate | seconds with zero successes | p99 |
-|---|---:|---:|---:|
-| baseline | 30.0 % / 29.7 % | 16 | ≈ 5.0 s |
-| final | 26.1 % / 25.8 % | 13–14 | ≈ 4.8 s |
+## 7. PostgreSQL frozen (`docker pause`) at t = 30 s, released at t = 50 s (60 rps, mixed cascades from cold, 2 interleaved reps per variant; `g1_*` labels)
+| variant | error rate | seconds with **zero** successes | seconds with > 1 s latencies | slowest request | p95 / p99 | OK during the 20 s freeze |
+|---|---:|---:|---:|---:|---|---:|
+| baseline | 27.1 % / 26.0 % | 14 / 14 | 22 / 22 | ≈ 6.0 s | 2.9–3.6 s / 4.6–5.3 s | 19 % / 22 % |
+| previous fixed version (`final3`) | 22.7 % / 24.9 % | 12 / 13 | 20 / 21 | ≈ 6.0 s | 3.2–3.4 s / 4.8–5.1 s | 32 % / 25 % |
+| **with the database guard** (deadline 2 s, bulkhead, breaker) | 25.8 % / 25.6 % | **0 / 0** | **2 / 2** | **2.0 s** (the deadline) | **6.8–9.5 ms / 17.6–18.0 ms** | 27 % / 27 % |
 
-Cached prefixes keep being served; misses hang for the whole freeze (kernel keeps ACKing, so no TCP-level timeout fires; pool/connect timeouts
-only bound *new* connections). **No meaningful improvement — F-27 remains open.**
+The error *rate* is the same by construction — cache misses cannot be answered while the database is frozen — but without the guard those misses held request threads for ≈ 5 s each and starved
+everything else (zero successes for 12–14 s, including requests that were in the cache); with the guard they fail instantly with 503 and cached prefixes keep being served at normal latency. Recovery
+after the database was released was observed in the timeline (successes resume within the breaker window, ≈ 5–6 s). Reads only: writes keep their blocking, at-most-once behaviour (FINDINGS F-27).
 
 ## 8. Resource use
 * Redis: ≈ 540–700 bytes per cached prefix (3 nodes, 4.5–5 k keys ≈ 5.3–6.1 MB total incl. ≈ 1 MB empty overhead each). With `noeviction`

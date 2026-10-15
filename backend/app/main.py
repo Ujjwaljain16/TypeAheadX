@@ -17,12 +17,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.datastructures import MutableHeaders
 from sqlalchemy.exc import SQLAlchemyError
 
-from .api.suggestions import router as suggestions_router, build_service, get_repository
+from .api.suggestions import router as suggestions_router, build_service, get_repository, get_guard
 from .api.cache import router as cache_router
 from .api.search import router as search_router, _metrics_payload
 from .cache.factory import CacheFactory
 from .cache.metrics import CacheMetrics
 from .database.config import get_settings
+from .database.guard import DatabaseUnavailable
 from .write_buffer.batch_worker import batch_worker
 from .write_buffer.buffer import write_buffer
 import asyncio
@@ -83,6 +84,12 @@ async def database_unavailable(_: Request, exc: SQLAlchemyError):
     return JSONResponse(status_code=503, content={"detail": "database temporarily unavailable"},
                         headers={"Retry-After": "1"})
 
+@app.exception_handler(DatabaseUnavailable)
+async def database_guard_rejected(_: Request, exc: DatabaseUnavailable):
+    # timeout / saturated / circuit open: fail fast so request threads stay free for cache hits
+    return JSONResponse(status_code=503, content={"detail": "database temporarily unavailable"},
+                        headers={"Retry-After": "2"})
+
 # Include routers
 app.include_router(suggestions_router, tags=["Suggestions"])
 app.include_router(cache_router, tags=["Cache"])
@@ -109,6 +116,7 @@ async def unified_metrics():
     return {
         "cache": cache_data,
         "write_buffer": _metrics_payload(),
+        "database_guard": get_guard().stats(),
     }
 
 

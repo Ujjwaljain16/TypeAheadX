@@ -5,6 +5,7 @@ from functools import lru_cache
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
 from ..database.config import Settings, get_settings
+from ..database.guard import DatabaseGuard
 from ..database.session import get_session
 from ..repositories.query_repository import QueryRepository
 from ..schemas.response import SuggestionResponse
@@ -13,9 +14,17 @@ from ..services.suggestion_service import SuggestionService
 router = APIRouter()
 
 
+@lru_cache(maxsize=1)
+def get_guard() -> DatabaseGuard:
+    settings = get_settings()
+    return DatabaseGuard(max_concurrency=settings.db_max_concurrency, timeout_s=settings.db_query_timeout_seconds,
+                         breaker_seconds=settings.db_breaker_seconds)
+
+
 def get_repository() -> QueryRepository:
     settings = get_settings()
-    return QueryRepository(get_session, trending_beta=settings.trending_beta, decay_lambda=settings.trending_lambda)
+    return QueryRepository(get_session, trending_beta=settings.trending_beta, decay_lambda=settings.trending_lambda,
+                           guard=get_guard())
 
 
 from ..cache.factory import CacheFactory

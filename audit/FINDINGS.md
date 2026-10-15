@@ -22,7 +22,7 @@ Regression-test column refers to files under `backend/tests/`. The mutation chec
 | F-07 | High | Loss of one Redis node takes down the whole API | measured | Fixed+verified |
 | F-08 | Medium | A Redis node that is down at start-up is never used again | measured | Fixed+verified |
 | F-09 | Medium | Start-up cache warm-up always crashes | measured | Fixed+verified |
-| F-10 | Medium | Documented trending ranking is not implemented; `idx_trending_score` is dead weight | measured | **Open** (product decision) |
+| F-10 | Medium | Documented trending ranking was not implemented; `idx_trending_score` was dead weight | measured | Fixed+verified (follow-up commit) |
 | F-11 | Medium | Unauthenticated `/search`: unbounded buffer, 50 MB bodies, data poisoning | measured | Fixed (bounds) / Open (auth) |
 | F-12 | Low | CORS `*` combined with `allow_credentials=True` | static | Fixed |
 | F-13 | Low | Unauthenticated debug/metrics endpoints; `/cache/debug` 500 with empty ring | static | Fixed (toggle, default on) / Open |
@@ -39,7 +39,7 @@ Regression-test column refers to files under `backend/tests/`. The mutation chec
 | F-24 | Info | No CI, no application Dockerfile, no lint config; original tests non-hermetic and vacuous | static | Partially addressed |
 | F-25 | Medium | Concurrent identical cache misses are not coalesced (3.5–10 DB queries per key for 200 simultaneous requests) | measured | Fixed+measured |
 | F-26 | Medium | Cache invalidation and flush are slow (≈ 0.5 s per 100 queries) because of per-key round trips | measured | Fixed+measured |
-| F-27 | Medium | No protection against a frozen (black-holed) database: requests hang | measured | **Open** (documented residual risk) |
+| F-27 | Medium | No protection against a frozen (black-holed) database: requests hang | measured | Fixed for reads (follow-up commit) / writes deliberately unchanged |
 | F-28 | Medium | Dependencies pinned to versions with 12 known vulnerabilities | measured (`pip-audit`) | Fixed+verified |
 | F-29 | Low | Unknown/unset `CACHE_PROVIDER` silently falls back to an unbounded per-process in-memory cache | static | Open (documented) |
 | F-30 | Info | `total_results` reports the number of returned rows (≤ 10), not matches | static | Doc |
@@ -89,7 +89,7 @@ Regression-test column refers to files under `backend/tests/`. The mutation chec
 * **Evidence.** Read: `" ".join(raw.strip().lower().split())`; write (`/search`): `strip().lower()` only. Measured:
   `POST /search "dbl  space   Test"` stored `dbl  space   test` (double spaces) — unreachable from `/suggest`, whose
   normaliser collapses spaces. No length limit, NUL, control-character or lone-surrogate check on the write path
-  (NUL and surrogates cannot be stored by PostgreSQL → batch failure, F-05). Measured on the baseline: `GET /suggest?q=a%00b` → **HTTP 500**; `POST /search {"query":"a b"}` → 200 and the flush later fails silently (buffer emptied, `flushes_executed` unchanged). Unicode composed/decomposed forms (`é` vs `e◌́`) were different keys.
+  (NUL and surrogates cannot be stored by PostgreSQL → batch failure, F-05). Measured on the baseline: `GET /suggest?q=a%00b` → **HTTP 500**; `POST /search {"query":"a\u0000b"}` → 200 and the flush later fails silently (buffer emptied, `flushes_executed` unchanged). Unicode composed/decomposed forms (`é` vs `e◌́`) were different keys.
 * **Fix.** `services/normalization.py` (NFC + lower + whitespace collapse) is the single normaliser; `validate_text` rejects empty
   (200 "ignored", API-compatible), > `MAX_QUERY_LENGTH` (200), control characters and lone surrogates (400).
 * **Tests.** `test_normalization.py` (Hypothesis: idempotence, no edge/double whitespace, read==write), `test_api_integration.py`
@@ -144,14 +144,23 @@ Regression-test column refers to files under `backend/tests/`. The mutation chec
   The README's "Warming up cache for A-Z prefixes" never happened.
 * **Fix.** Warm-up builds the service via `build_service`, runs in a worker thread, per-letter errors are logged. **Fixed+verified** (lifespan integration tests start it).
 
-## F-10 — Documented ranking is not implemented  *(Medium, confirmed, Open)*
-* **Evidence.** `docs/ARCHITECTURE.md` §4: `final_score = historical_count + 10·recent_count`. The only ranking query is
-  `ORDER BY historical_count DESC, query ASC`; `recent_count` is written but never read for ranking; `TRENDING_BETA` is never read;
-  `idx_trending_score` (3.2 MB) has `idx_scan = 0` and is maintained on every upsert. Because decay is applied only when a query is written,
-  a stored `recent_count` of a query that is no longer searched never decays, so the indexed expression cannot rank "recent" correctly
-  even if used — a correct implementation needs query-time decay (not indexable) or periodic decay.
-* **Why open.** Changing ranking changes product behaviour (explicit rule 8). Options: (a) drop the dead index + document "popularity only"; (b) rank by a
-  periodically-decayed score column; (c) rank by `historical + β·recent·exp(−λΔt)` computed over the top-K candidates only. Not changed.
+## F-10 — Documented ranking was not implemented  *(Medium, confirmed; fixed in the follow-up commit)*
+* **Evidence (baseline).** `docs/ARCHITECTURE.md` §4: `final_score = historical_count + 10·recent_count`. The only ranking query was
+  `ORDER BY historical_count DESC, query ASC`; `recent_count` was written but never read for ranking; `TRENDING_BETA` was never read;
+  `idx_trending_score` (3.2 MB) had `idx_scan = 0` and was maintained on every upsert. Because decay is applied only when a query is written, a stored
+  `recent_count` of a query that is no longer searched never decays, so ranking on the stored value would have been wrong even if it had been used.
+* **Decision.** Implement the documented intent (the maintainer's docs are the only statement of intended behaviour), keeping everything else compatible.
+* **Fix.** `score = historical_count + β · recent_count · exp(−λ · hours since recent_count was last updated)`, the decay evaluated **at read time**
+  (`query_repository._FETCH_SQL`); `β = TRENDING_BETA` (10), `λ = TRENDING_LAMBDA` (0.5), the same λ as the write path. Ties fall back to
+  `historical_count DESC, query ASC`, so rows never searched through `/search` (`recent_count = 0`, i.e. the whole loaded dataset) sort **exactly as before**;
+  displayed counts and the response schema are unchanged. `idx_trending_score` is no longer created (`schema.sql`) and `migrate.py` drops it
+  (existing deployments: `DROP INDEX IF EXISTS idx_trending_score`).
+* **Cost.** Same query plan; worst-case 1-character prefix (6 177 matches) 4.4 → 5.2 ms (+0.8 ms), typical prefixes unchanged (0.27 ms); results are cached.
+  Effect of dropping the dead index on 100-row upserts: within noise (≈ 0–1 ms).
+* **Behaviour change to be aware of.** Order can now differ from raw `historical_count` order when recent searches exist (that is the point); entries cached for
+  ≤ 300 s keep the older order, and a trend fades by itself at read time as the cache refreshes.
+* **Tests.** `test_repository_pg.py` (recent activity lifts a query above more popular ones; fades with no write; β = 0 and untouched rows rank by history;
+  parameters passed), `test_api_integration.py::test_searches_make_a_query_trend_end_to_end` (120 searches → flush → it ranks first although its count is 347 < 987). Mutants M16, M17 killed.
 
 ## F-11 — Unauthenticated `/search`  *(Medium, confirmed; bounds fixed, authentication open)*
 * **Evidence.** `/search` accepts arbitrary strings of any length with no authentication or rate limit. Baseline measurements: a single 50 MB request body was accepted
@@ -216,9 +225,23 @@ Per-process single-flight (`suggestion_service._single_flight`, double-checked, 
 ## F-26 — Slow flush  *(Medium, measured)*
 Flush of 100 distinct queries: ≈ 500 ms (SELECT + 100-row executemany + ≈ 1 600 sequential `DEL`s). Fixed ≈ 14 ms (O-5, O-6).
 
-## F-27 — Frozen database  *(Medium, measured, Open)*
-With `docker pause` on PostgreSQL the kernel keeps ACKing, so TCP-level timeouts never fire; statements on already-checked-out connections hang until the database resumes. Pool/connect timeouts bound *new* connection attempts only.
-A real fix needs client-side per-request deadlines with connection invalidation (or an async driver with cancellation) — not attempted. Measured (60 rps, DB frozen 20 s, 2 reps): baseline 30 % errors / 16 s with zero successes, final 26 % / 13–14 s — **no meaningful improvement**. `BENCHMARK_RESULTS.md` §7.
+## F-27 — Frozen database  *(Medium, measured; reads fixed in the follow-up commit, writes unchanged by design)*
+* **Evidence (baseline).** With `docker pause` on PostgreSQL the kernel keeps ACKing, so TCP-level timeouts never fire and statements on checked-out connections hang until the
+  database resumes; pool/connect timeouts only bound *new* connections. Every cache-missing request then holds one of the 40 request threads, and after ≈ 40 of them even requests
+  that could be served from the cache fail. Measured (60 rps, database frozen for 20 s, 2 reps per variant, `audit/results/g1_*`): baseline **14 seconds with zero successes, 22 seconds
+  with > 1 s latencies, slowest request ≈ 6 s, p95 2.9–3.6 s**, only 19–22 % of requests succeeded during the freeze; the earlier fixed version was the same (12–13 s, 20–21 s, 32/25 %).
+* **Fix (`app/database/guard.py`).** Read-path database calls (`fetch_suggestions`, `ping`) run on ≤ 15 daemon worker threads (`DB_MAX_CONCURRENCY`, = the SQLAlchemy pool size) and the request thread waits at most
+  `DB_QUERY_TIMEOUT_SECONDS` (2 s); no more than `DB_MAX_CONCURRENCY` calls are in flight (bulkhead — callers are rejected immediately instead of queueing behind hung ones; a rejection is load, not a sick database, so it does not open the breaker); the first timeout or
+  connection-level error opens a circuit breaker for `DB_BREAKER_SECONDS` (5 s), during which misses fail instantly with 503 + `Retry-After` and cache hits are untouched; one probe then tests recovery.
+  The breaker implementation is shared with the Redis nodes (`app/utils/breaker.py`). `/metrics` exposes `database_guard` counters.
+* **Result (same experiment, new code).** **0 seconds with zero successes, 2 seconds with > 1 s latencies, slowest request 2.0 s (= the deadline), p95 7–10 ms, p99 ≈ 18 ms.** The error *rate* is unchanged (≈ 26 %, the cache misses still
+  cannot be answered) but errors are immediate 503s instead of 5 s hangs, and cached prefixes keep being served at normal speed during the freeze.
+* **Deliberately NOT guarded: writes.** When a write times out the statement may still execute once the database resumes; re-queueing it would double count. The flush thread therefore keeps its blocking,
+  at-most-once behaviour, and the bounded buffer (F-11) limits memory while it waits. Consequence: write latency and event delivery during a freeze are unchanged (events are persisted after recovery — measured in `exp_write_freeze`).
+* **Residual.** Up to 15 worker threads can stay blocked inside hung calls until the database answers or the OS drops the connection (daemon threads, so they never block process exit); the guard does not tear down the hung
+  connections. The deadline is a fixed default (2 s) — tune `DB_QUERY_TIMEOUT_SECONDS` for the real query-time distribution.
+* **Tests.** `test_database_guard.py` (7 cases: deadline bound, instant fail with breaker open, bulkhead rejects at once, half-open probe recovery, connection errors trip but SQL errors do not,
+  daemon threads, thread count bounded), `test_api_integration.py::test_hung_database_fails_fast_with_503_while_cached_prefixes_keep_working` (including recovery). Mutants M14, M15 killed.
 
 ## F-28 — Vulnerable pins  *(Medium)*
 `pip-audit` on the original lock: `starlette 1.2.1` (PYSEC-2026-248/249), `anyio 4.13.0` (4024/4025), `urllib3 2.7.0` (4175-4177), `pydantic-settings 2.14.1` (CVE-2026-58203), `pytest 8.4.2` (1845) — 12 advisories.

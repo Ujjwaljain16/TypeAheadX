@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     # Fail fast instead of piling requests up behind a sick database (SQLAlchemy default pool wait: 30 s).
     db_pool_timeout_seconds: float = Field(default=5.0, validation_alias="DB_POOL_TIMEOUT_SECONDS")
     db_connect_timeout_seconds: int = Field(default=5, validation_alias="DB_CONNECT_TIMEOUT_SECONDS")
+    # Read-path database deadline / bulkhead / breaker (app/database/guard.py). Queries normally take ~5 ms.
+    db_query_timeout_seconds: float = Field(default=2.0, validation_alias="DB_QUERY_TIMEOUT_SECONDS")
+    db_max_concurrency: int = Field(default=15, validation_alias="DB_MAX_CONCURRENCY")   # = SQLAlchemy pool (5 + 10)
+    db_breaker_seconds: float = Field(default=5.0, validation_alias="DB_BREAKER_SECONDS")
     cors_origins: str = Field(default="*", validation_alias="CORS_ORIGINS")
     enable_debug_endpoints: bool = Field(default=True, validation_alias="ENABLE_DEBUG_ENDPOINTS")
     

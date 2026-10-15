@@ -41,6 +41,8 @@ if INTEGRATION:
     os.environ["WRITE_BUFFER_FLUSH_INTERVAL"] = "3600"   # tests flush explicitly
     os.environ["WRITE_BUFFER_SIZE"] = "1000000"
     os.environ["CACHE_TTL_SECONDS"] = "300"
+    os.environ["DB_QUERY_TIMEOUT_SECONDS"] = "0.5"      # fast deadline/breaker so hung-database tests are quick
+    os.environ["DB_BREAKER_SECONDS"] = "1"
 
 SEED_ROWS = [
     ("iphone 15 pro case", 987), ("iphone 14 pro max case", 908), ("iphone", 520), ("iphone 13 case", 381),

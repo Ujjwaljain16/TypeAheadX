@@ -17,12 +17,12 @@ failure into a total outage:
 | "Cache node failure → 100 % available, vnodes removed from ring" | **No** ring removal exists; at 100 rps one dead node ⇒ **36–38 % errors and ~17 s with zero successful requests** (F-07) |
 | "Horizontally scalable" write path | 6 concurrent flushers lost **67–70 %** of counter updates (read-modify-write) (F-06) |
 | "Write buffer protects the DB" | One unpersistable row discarded the whole batch; no failure metric; unbounded memory; 50 MB bodies accepted (F-05, F-11) |
-| Trending ranking = history + 10·recent | Ranking uses `historical_count` only; the trending index is dead weight (F-10, **left open**) |
+| Trending ranking = history + 10·recent | Ranking used `historical_count` only; the trending index was dead weight (F-10; **implemented in a follow-up commit**, see §3) |
 | Install & run from README | `import app.main` fails in a clean env (`redis` missing); frontend cannot be built on Linux (F-01, F-20) |
 
 After the changes the system is **materially more correct, more resilient and cheaper per request**, but it is **not production-ready**:
 it still has no authentication/rate limiting, no durable event log, no protection against a hung database, an unverified
-multi-worker/Linux behaviour, no CI, and the documented trending ranking remains unimplemented.
+multi-worker behaviour, and no durable event log.
 
 ## 2. Verified architecture (summary; details in `ARCHITECTURE.md`)
 Browser (debounce 250 ms, abort-previous) → FastAPI sync `/suggest` (thread pool) → normalise → Redis ring (MD5, 500 vnodes, 3 nodes) → on miss PostgreSQL
@@ -38,8 +38,8 @@ Verified against code, not docs; discrepancies are listed in §6.
 | F-05 | batch poisoning / silent loss | validation, bisect-isolation, re-queue, metrics | 7 unit + integration tests |
 | F-02 | LIKE metacharacters | escaping, `ESCAPE '\'`, index use asserted | 150-case property test vs PostgreSQL |
 | F-20, F-01 | cannot install/build | requirements, lock regenerated (0 CVEs), Next pinned to a published release | clean-venv 121/121; Linux `npm ci` + `tsc` |
-| F-10 | trending ranking not implemented | **not changed** (needs product decision; options in FINDINGS) | — |
-| F-27 | hung (frozen) PostgreSQL | **not fixed**; measured: no improvement (26 % vs 30 % errors) | `BENCHMARK_RESULTS.md` §7 |
+| F-10 | trending ranking not implemented | **implemented** (follow-up): read-time decayed score, dead index removed; rows never searched rank as before | 6 DB-backed tests incl. end-to-end; mutants M16/M17; plan unchanged, worst case +0.8 ms |
+| F-27 | hung (frozen) PostgreSQL | **fixed for reads** (follow-up): 2 s deadline + bulkhead + breaker; writes deliberately unguarded | frozen-DB runs: zero-success seconds 14 → 0, slowest request 6 s → 2 s, p99 5 s → 18 ms; 8 tests; mutants M14/M15 (`BENCHMARK_RESULTS.md` §7) |
 
 ## 4. Security assessment (threat model summary)
 Assets: suggestion integrity (popularity counters), availability, Redis/PostgreSQL data. Trust boundary: the public HTTP API (anyone can call `/search`, `/suggest`, `/metrics`, `/cache/*`).
@@ -74,7 +74,7 @@ Interleaved baseline vs final, 3 repetitions per point, one worker, one machine:
 | Flush of 100 queries | ≈ 500 ms | ≈ 14 ms | |
 | Lost updates, 6 flushers | 67–70 % | 0 % | |
 | Miss-path latency (cold/mixed/high-cardinality/read-write at ≤ 150 rps) | — | within noise (≤ −20 % at best) | the cache is not the dominant cost; PostgreSQL + network are |
-| PostgreSQL frozen | 30 % errors | 26 % errors | **not solved** |
+| PostgreSQL frozen (20 s) | 14 s with zero successes, slowest 6 s, p99 5 s | **0 s** with zero successes, slowest 2 s, p99 18 ms (error rate unchanged ≈ 26 % — misses cannot be answered — but immediate 503s) | follow-up commit |
 
 Honest caveats: the first (non-interleaved) matrix measured the same baseline code ≈ 2× slower and with a ≈ 300 rps knee — machine drift,
 which is why only interleaved comparisons are used. The final code in the 240-point matrix was `v_final`; two later changes (retry disable; skipping the unconditional
@@ -92,25 +92,25 @@ cache re-check) were validated in isolation (outage ×4 runs, high-cardinality �
 | "Dead node's vnodes are instantly deleted; 100 % available" | **False** | no such code; measured 36–38 % errors |
 | "Active prefix invalidation" | **False (baseline)** | F-03 |
 | "Sub-millisecond autocomplete" (README) | **Not supported** | server-side `X-Response-Time-ms` on cache hits (sequential, 1 500 requests): baseline p50 1.61 / p99 2.44 ms; final p50 0.87 / p95 1.26 / p99 1.80 ms. End-to-end HTTP p50 1.1–2 ms (hit) and 4–6 ms (miss) in the load runs |
-| "Trending ranking (history + 10·recent)" | **Not implemented** | F-10 |
+| "Trending ranking (history + 10·recent)" | **Not implemented in the baseline; implemented in the follow-up** (with read-time decay) | F-10 |
 | Write reduction 74.31 % / 95.37 % | Simulation, not the system | `write_sensitivity.py` is unseeded, ignores the 10 s trigger and counts rows, not statements |
 | `BUFFER_SIZE` env var | Wrong name | actual `WRITE_BUFFER_SIZE`; unit is *distinct queries* |
 | "Phase 1 PostgreSQL p50 7.48 ms" in the generated report | Hard-coded constants | `final_benchmark.py` |
 
 ## 7. Remaining risks and limitations
-1. Hung database (F-27) — requests pile up for the whole outage; needs per-request deadlines.
+1. Hung database (F-27) — reads now fail fast (2 s deadline, breaker) but up to 15 worker threads can stay blocked in hung calls until the database answers; writes still block (by design: at-most-once).
 2. Durability — in-memory buffer; crash loses ≤ ~10 s of counter updates; no replay. Acceptable only if popularity counters are non-critical.
 3. No authentication/rate limiting on `/search`; poisoning and shedding remain possible.
-4. Trending ranking decision (F-10); dead index costs write maintenance (unmeasured at 3.2 MB / 150 k rows).
+4. Ranking weights (`TRENDING_BETA` = 10, `TRENDING_LAMBDA` = 0.5) are the documented defaults, not tuned against real traffic; cached results keep the old order for ≤ 300 s after a trend starts.
 5. Everything is single-host/Windows/Docker-Desktop evidence; multi-worker scaling, Linux, large datasets, Redis eviction, soak and slow-dependency faults are unmeasured.
 6. Frontend has no automated tests; cancellation/out-of-order behaviour verified by inspection only; 2 pre-existing lint errors remain (`set-state-in-effect`).
 7. The new `ENABLE_DEBUG_ENDPOINTS` default is on (compatibility); `CACHE_PROVIDER` unknown ⇒ silent in-memory fallback (F-29).
 8. Per-process coalescing and metrics under `--workers N`; the cache-aside invalidation race (≤ TTL) is accepted.
 
 ## 8. Recommended next steps (ordered by value / cost)
-1. Decide ranking semantics (F-10), then drop or fix `idx_trending_score`.
+1. (done in the follow-up commit: ranking semantics, dead index)  Tune β/λ with real traffic; consider an A/B of ranking with and without the trend term.
 2. Add a gateway/auth + rate limit for `/search`, set `ENABLE_DEBUG_ENDPOINTS=false`, `requirepass`/ACLs, `maxmemory` + `allkeys-lru` on Redis.
-3. Introduce request deadlines for database calls (async driver or `statement_timeout` + connection invalidation) and test with `docker pause` (F-27).
+3. (done for reads in the follow-up commit) Next: tear down hung connections and give writes an idempotency key so they can also carry a deadline safely.
 4. Add CI running `pytest` (unit always, integration against service containers), `bandit`, `pip-audit`, `tsc`, `next build`; add an application Dockerfile (non-root).
 5. Re-run the matrix on Linux with `--workers 2/4` and the generator on another host; add a ≥ 1 M-row dataset and a 24 h soak.
 6. Only if durability of counters matters: append-only local journal or Redis stream *before* buffering (justified by the measured ≤ 10 s exposure, not before).
@@ -118,12 +118,12 @@ cache re-check) were validated in isolation (outage ×4 runs, high-cardinality �
 ## 9. Final verification checklist
 | Item | Result |
 |---|---|
-| Tests | **121 passed** (62 need no services; 59 integration tests run against real PostgreSQL 15 + Redis 7 and are skipped with a reason when the two environment variables are absent); 89 % line coverage of `app/`; also 121/121 in a clean venv with the newest resolvable dependencies (Starlette 1.8, FastAPI 0.143, SQLAlchemy 2.1, pytest 9) |
-| Mutation check | 13 re-introduced defects (`benchmarks/mutation_smoke.py`): **13/13 killed**; three survivors were first found and fixed in the *mutants/tests* (equivalent mutant, probabilistic deadlock test, wrong retry mutant) |
+| Tests | **134 passed** at the follow-up commit (121 at the main audit commit) (62 need no services; 59 integration tests run against real PostgreSQL 15 + Redis 7 and are skipped with a reason when the two environment variables are absent); 89 % line coverage of `app/`; also 121/121 in a clean venv with the newest resolvable dependencies (Starlette 1.8, FastAPI 0.143, SQLAlchemy 2.1, pytest 9) |
+| Mutation check | 13 re-introduced defects (`benchmarks/mutation_smoke.py`): **17/17 killed** (13 at the main commit; M14–M17 cover the database guard and the ranking); three survivors were first found and fixed in the *mutants/tests* (equivalent mutant, probabilistic deadlock test, wrong retry mutant) |
 | Static analysis | bandit: no issues after `usedforsecurity=False` on MD5 and a `nosec` on jitter; ruff F,B,S: clean; pip-audit: new lock 0 CVEs (old lock 12); `tsc --noEmit`: clean; eslint: 2 pre-existing errors remain (3 fixed) |
 | Frontend build | `next build` OK on Windows; `npm ci` + `tsc` OK on Linux (node:22-alpine); Linux `next build` not run (needs network for Google Fonts) |
 | Benchmarks | 14 scenarios × baseline/final interleaved (240 points × 20–120 s); extra: saturation sweep, 4 outage re-runs, high-cardinality ×4, stampede ×15, write-freeze ×2, lost-update ×3, node-down-at-start ×2, flush-duration ×9 |
 | Optimizations applied | O-1 … O-6 (+ reliability changes); each with isolated A/B in `OPTIMIZATIONS.md` |
 | Regressions detected and resolved | extra Redis GET per miss from my single-flight re-check (+0.93 commands/request) → gated; first breaker version still stalled 5 s due to redis-py retries → retries disabled; an early "99 % loss" reading of the write-freeze test was a measurement bug → corrected |
 | Blocked / not done | multi-worker, Linux, large dataset, soak, slow-dependency injection, browser E2E, container hardening (no Dockerfile), CI, authentication |
-| Known unresolved | F-10, F-27, F-11 (auth), F-13 default, F-29, F-31 |
+| Known unresolved | F-11 (auth/rate limiting), F-13 default, F-27 (writes + hung worker threads), F-29, F-31 |

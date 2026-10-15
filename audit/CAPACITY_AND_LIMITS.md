@@ -32,7 +32,7 @@ Price/performance was not evaluated (no cloud resources were used).
 1. **Hit path:** API-process CPU (Python request handling). Redis (3 nodes, ≈ 0.3 ms per GET) and PostgreSQL were far from saturated.
 2. **Miss path:** per-request latency ≈ 4–6 ms is dominated by Redis GET + PostgreSQL round trip + Docker-proxy latency, not by query execution
    (index scan 0.04–3.6 ms). Throughput is again limited by API CPU.
-3. **Failure regimes:** thread-pool starvation (baseline, Redis node down) and unbounded waiting on a frozen database (both versions).
+3. **Failure regimes:** thread-pool starvation (baseline, Redis node down — fixed) and unbounded waiting on a frozen database (baseline and first fix; fixed for reads by the database guard: worst-case request 2 s, no unresponsive seconds in the measured freeze). Write-side behaviour during a freeze is unchanged (blocking, bounded buffer).
 
 ## Memory
 * API process ≈ 82–93 MB RSS; write buffer ≈ 30 MB per 150 000 distinct queries (baseline unbounded; final capped at 50 000 distinct = ≈ 10 MB).

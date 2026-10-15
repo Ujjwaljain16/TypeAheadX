@@ -4,6 +4,7 @@ from typing import Mapping, Sequence
 
 from sqlalchemy import text
 
+from ..database.guard import DatabaseGuard
 from ..models.query import QuerySuggestion
 from ..services.normalization import escape_like
 
@@ -53,7 +54,8 @@ _UPSERT_SQL = text(
 
 
 class QueryRepository:
-    def __init__(self, session_factory, trending_beta: float = 0.0, decay_lambda: float = 0.5):
+    def __init__(self, session_factory, trending_beta: float = 0.0, decay_lambda: float = 0.5,
+                 guard: DatabaseGuard | None = None):
         """session_factory should be a context manager that yields a SQLAlchemy Session.
 
         ``trending_beta`` weights the (read-time decayed) recent count in the ranking score; 0 means
@@ -61,8 +63,16 @@ class QueryRepository:
         self._session_factory = session_factory
         self._beta = float(trending_beta)
         self._lambda = float(decay_lambda)
+        # Read-path calls (fetch_suggestions, ping) go through the guard when one is given. Writes never do:
+        # a timed-out write may still be executed later, so it must not be retried or re-queued.
+        self._guard = guard
 
     def fetch_suggestions(self, prefix: str, limit: int) -> Sequence[QuerySuggestion]:
+        if self._guard is not None:
+            return self._guard.call(self._fetch, prefix, limit)
+        return self._fetch(prefix, limit)
+
+    def _fetch(self, prefix: str, limit: int) -> Sequence[QuerySuggestion]:
         params = {"pattern": escape_like(prefix) + "%", "limit": limit, "beta": self._beta, "lam": self._lambda}
         with self._session_factory() as session:  # type: Session
             rows = session.execute(_FETCH_SQL, params).fetchall()
@@ -85,5 +95,11 @@ class QueryRepository:
             session.commit()
 
     def ping(self) -> None:
+        if self._guard is not None:
+            self._guard.call(self._ping)
+        else:
+            self._ping()
+
+    def _ping(self) -> None:
         with self._session_factory() as session:
             session.execute(text("SELECT 1"))
