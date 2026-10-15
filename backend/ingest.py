@@ -73,8 +73,9 @@ def ingest_csv(dsn: str, handle: TextIO) -> int:
                 
                 cur.execute("""
                 INSERT INTO queries (query, historical_count)
-                SELECT query, historical_count
+                SELECT query, SUM(historical_count)
                 FROM queries_ingest_stage
+                GROUP BY query
                 ON CONFLICT (query)
                 DO UPDATE SET historical_count = queries.historical_count + EXCLUDED.historical_count;
                 """)

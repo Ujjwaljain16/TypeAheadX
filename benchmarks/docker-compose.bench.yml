@@ -1,0 +1,41 @@
+# Disposable infrastructure for audit/benchmark runs.
+# Same images as the repository's docker-compose.yml, but on distinct host ports
+# (the default 6379 may be occupied by other local software) and with explicit
+# container names so failure-injection scripts can address them.
+#   docker compose -p taxaudit -f benchmarks/docker-compose.bench.yml up -d
+name: taxaudit
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: taxaudit-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: typeaheadx
+    ports: ["47433:5432"]
+    cpus: 2
+    mem_limit: 2g
+    tmpfs: ["/var/lib/postgresql/data"]   # disposable; no persistent volume
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d typeaheadx"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  redis-a:
+    image: redis:7-alpine
+    container_name: taxaudit-redis-a
+    ports: ["47379:6379"]
+    cpus: 1
+    mem_limit: 512m
+  redis-b:
+    image: redis:7-alpine
+    container_name: taxaudit-redis-b
+    ports: ["47380:6379"]
+    cpus: 1
+    mem_limit: 512m
+  redis-c:
+    image: redis:7-alpine
+    container_name: taxaudit-redis-c
+    ports: ["47381:6379"]
+    cpus: 1
+    mem_limit: 512m

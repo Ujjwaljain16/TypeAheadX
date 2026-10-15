@@ -50,7 +50,7 @@ export function SuggestionDropdown({
 
       {!isLoading && !error && suggestions.length === 0 && debouncedQuery && (
         <div className="p-4 text-center text-sm text-slate-500">
-          No results found for "<span className="font-semibold">{debouncedQuery}</span>"
+          No results found for &quot;<span className="font-semibold">{debouncedQuery}</span>&quot;
         </div>
       )}
     </div>

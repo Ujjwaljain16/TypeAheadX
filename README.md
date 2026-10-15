@@ -1,5 +1,10 @@
 # TypeAheadX
 
+> **Audit notice (October 2026).** An independent engineering audit of this repository is in [`audit/`](./audit/FINAL_REPORT.md). It corrected several
+> behaviours described below (e.g. cache invalidation, node-failure handling, install instructions) and found claims in this README and in `docs/` that the code
+> or the benchmark methodology do not support — see `audit/FINAL_REPORT.md` §6 *Claims review* before relying on the figures in this file.
+
+
 > A production-inspired distributed search autocomplete system that evolved from a simple PostgreSQL query engine into a horizontally scalable architecture featuring distributed caching, consistent hashing, trending ranking, and asynchronous write aggregation.
 
 **Core Philosophy:** "The architecture was not designed once and implemented. It was continuously challenged by experiments, and the final system is the result of measured trade-offs rather than assumptions."

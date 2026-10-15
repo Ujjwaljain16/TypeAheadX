@@ -10,7 +10,13 @@ from .config import get_settings
 
 
 settings = get_settings()
-engine = create_engine(settings.database_url, future=True)
+engine = create_engine(
+    settings.database_url,
+    future=True,
+    pool_timeout=settings.db_pool_timeout_seconds,           # wait at most this long for a free connection
+    pool_recycle=1800,                                        # do not reuse connections older than 30 min
+    connect_args={"connect_timeout": settings.db_connect_timeout_seconds},  # bound TCP connect / auth
+)
 SessionLocal = sessionmaker(bind=engine, class_=Session, expire_on_commit=False)
 
 
