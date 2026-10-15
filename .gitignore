@@ -24,4 +24,5 @@ backend/.coverage
 .coverage
 frontend/.next/
 frontend/node_modules/
-audit/results/**/server_*.log
+benchmarks/results/**/server_*.log
+benchmarks/results/demo_*.log

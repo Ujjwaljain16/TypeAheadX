@@ -1,5 +1,7 @@
 # Capacity and limits
 
+> **Update:** Linux and 2 workers were later measured on a GitHub-hosted runner — see "Linux, free, and multi-worker" in [`benchmarks.md`](./benchmarks.md). Where this page says "not tested: `--workers N`, Linux", read "not tested beyond 2 workers; Linux only on a shared 4-vCPU runner".
+
 Scope: what was **measured** on one machine with one API worker, what is **inferred**, and what is **unknown**.
 No linear extrapolation to production scale is made or implied.
 

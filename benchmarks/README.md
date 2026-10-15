@@ -40,6 +40,9 @@ no scenario touches any database or Redis other than the ports listed in `env.sh
 | `exp_*.py` | fault/consistency experiments: lost updates, node down at start-up, write path during a DB freeze, flush duration |
 | `mutation_smoke.py` | re-introduces defects found earlier (17 mutants) and checks the test-suite fails |
 | `compare.py` | compact before/after table from two result labels |
+| `demo/capture_demo.py` | drives the real UI with Playwright, kills a Redis node mid-session and records the screenshots + GIF used in the README |
+| `ci_matrix.sh` + `../.github/workflows/benchmark.yml` | the same interleaved comparison on a GitHub-hosted **Linux** runner (1 and 2 workers) |
+| `results/` | every measurement (JSON/CSV, raw per-request data for the headline runs) — see `results/README.md` |
 | `simulations/` | pure-computation studies (ring ownership, key movement on topology change, write-buffer sizing) — no services needed |
 
 ## Scenarios
